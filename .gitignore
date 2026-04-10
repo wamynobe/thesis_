@@ -1,0 +1,36 @@
+# LaTeX build artifacts
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.run.xml
+*.synctex.gz
+*.toc
+*.lof
+*.lot
+*.nav
+*.snm
+*.vrb
+*.dvi
+*.ps
+texput.log
+
+# Minted cache
+_minted-*/
+
+# Generated PDF (uncomment to track)
+# *.pdf
+
+# Editor files
+*.swp
+*.swo
+*~
+.DS_Store
+
+# latexmk
+*.latexmain
+
