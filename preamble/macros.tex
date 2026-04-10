@@ -1,0 +1,44 @@
+%% ============================================================
+%% Custom commands, abbreviations, math operators
+%% ============================================================
+
+\usepackage{xspace}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+%% --- Convenience abbreviations ---
+\newcommand{\eg}{e.g.\@\xspace}
+\newcommand{\ie}{i.e.\@\xspace}
+\newcommand{\etc}{etc.\@\xspace}
+\newcommand{\wrt}{w.r.t.\@\xspace}
+
+%% --- Domain-specific abbreviations ---
+\newcommand{\capt}{CAPT\xspace}
+\newcommand{\tc}{TC\xspace}
+\newcommand{\fzero}{F\textsubscript{0}\xspace}
+\newcommand{\wavvec}{Wav2Vec~2.0\xspace}
+\newcommand{\hubert}{HuBERT\xspace}
+\newcommand{\ssl}{SSL\xspace}
+\newcommand{\asr}{ASR\xspace}
+
+%% --- Thesis metadata ---
+\newcommand{\thesistitle}{Developing an ML Model for Assessing Mandarin Pronunciation in Vocabulary Learning}
+\newcommand{\thesisauthor}{Nguyen Quang Huy}
+\newcommand{\thesissupervisor}{dr Adam Przyby{\l}ek}
+\newcommand{\thesisdepartment}{Department of Software Engineering}
+\newcommand{\thesisfaculty}{Faculty of Electronics, Telecommunications and Informatics}
+\newcommand{\thesisuniversity}{Gda\'{n}sk University of Technology}
+\newcommand{\thesisyear}{2026}
+
+%% --- Draft helpers ---
+\newcommand{\todo}[1]{\textcolor{red}{\textbf{[TODO: #1]}}}
+\newcommand{\fixme}[1]{\textcolor{orange}{\textbf{[FIXME: #1]}}}
+\newcommand{\note}[1]{\textcolor{blue}{\textbf{[NOTE: #1]}}}
+
+%% --- Math operators ---
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator{\softmax}{softmax}
+
+%% --- Graphics path ---
+\graphicspath{{img/}}

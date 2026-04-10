@@ -1,0 +1,44 @@
+%% ============================================================
+%% Chapter 1 — Introduction
+%% ============================================================
+
+\chapter{Introduction}\label{chapter:1_Introduction}
+
+\section{Context}
+\label{sec:intro:context}
+
+Mandarin Chinese has approximately 1.14~billion native and second-language speakers worldwide, including an estimated 199~million people who have learned it as a foreign language~\cite{icls2026}. These figures help explain why Mandarin remains an important target language in education and professional communication. Unlike the majority of Indo-European languages, Mandarin is a \emph{tonal} language: the pitch contour realised at the syllable level is phonemically distinctive, meaning that a change in tone can change the meaning of a word entirely~\cite{yip2002,duanmu2007}. Standard Mandarin employs four lexical tones---a high-level tone~(T1), a rising tone~(T2), a dipping tone~(T3), and a falling tone~(T4)---plus a reduced neutral tone~(T5). For example, the syllable \textit{ma} can mean ``mother'' (T1), ``hemp'' (T2), ``horse'' (T3), or ``scold'' (T4), depending solely on its tonal realisation~\cite{duanmu2007}.
+
+The tonal nature of Mandarin poses a substantial challenge for second-language~(L2) learners whose first language is non-tonal. In non-tonal languages such as Polish, English, or French, pitch variation serves only a prosodic function---signalling questions, emphasis, or discourse boundaries---rather than a lexical one. Consequently, learners from these linguistic backgrounds tend to underperceive tonal contrasts and produce pitch contours that deviate systematically from native targets~\cite{hao2012}. Research on L2 tone acquisition has identified certain tone pairs as particularly problematic: the T2/T3 contrast, where both tones begin in the low-pitch region, is consistently the most confusable for non-tonal-L1 learners~\cite{hao2012}. A recent study specifically targeting Polish learners of Mandarin reported systematic differences in both pitch height and contour shape relative to native speakers across disyllabic tonal combinations~\cite{chu2024statistical}. Taken together, these studies indicate that Polish learners constitute a relevant population for evaluating automatic methods intended to support Mandarin tone training.
+
+Computer-Assisted Pronunciation Training~(CAPT) systems aim to address this need by providing automated, scalable feedback on learner pronunciation~\cite{neri2002,rogerson2021}. A CAPT system typically comprises an automatic speech recognition or classification component that analyses the learner's production, coupled with a feedback mechanism that communicates results. In the specific domain of Mandarin tone assessment, early classifiers adopted convolutional neural network~(CNN) architectures---operating on pitch-contour features~\cite{chen2016cnn} or mel-spectrogram representations~\cite{gao2019tonenet}---achieving high accuracy on isolated syllables under controlled conditions. While effective, these models rely on hand-crafted acoustic features and are trained from scratch, limiting their ability to generalise across speakers, recording conditions, and levels of proficiency.
+
+Recent work in speech processing has increasingly relied on self-supervised learning~(SSL) models such as Wav2Vec~2.0~\cite{baevski2020} and HuBERT~\cite{hsu2021}. These models are pre-trained on large amounts of unlabelled speech and can then be adapted to downstream tasks with comparatively limited labelled data. In Mandarin speech research, prior studies have shown that intermediate SSL representations retain information relevant to lexical tone and other suprasegmental categories, and that task-specific fine-tuning can improve tone-related analysis~\cite{yuan2023,delafuente2024}. For this reason, SSL-based classifiers are a plausible alternative to earlier CNN-based tone-classification systems, especially in settings where learner speech is variable and labelled data are limited.
+
+\section{Identification of Gaps}
+\label{sec:intro:gaps}
+
+The literature reviewed above leaves three issues unresolved for the present study.
+
+\textbf{Population gap.} The vast majority of existing CAPT and tone classification systems have been trained and evaluated on native Mandarin speakers, or on L2 populations whose first language is itself tonal (e.g., Cantonese or Vietnamese speakers). Very limited work has targeted learners from non-tonal language backgrounds, and almost none has focused specifically on \textbf{Polish L1 learners} of Mandarin. The study by Chu et~al.~\cite{chu2024statistical} provides a valuable acoustic analysis of Polish learners' tonal productions, but it does not develop or evaluate any classification model. To the best of the author's knowledge, no published study has evaluated modern Mandarin tone classifiers on speech produced by this population.
+
+\textbf{Model comparison gap.} While both CNN-based and SSL-based approaches have been applied to Mandarin tone classification independently, no systematic comparison of these paradigms has been conducted on non-native learner speech. Furthermore, SSL models can be pre-trained on different data---native Mandarin corpora, mixed native-and-learner corpora, or multilingual checkpoints---and the effect of these pre-training strategies on downstream tone classification accuracy for L2 speakers remains unexplored.
+
+\textbf{Expert alignment gap.} Existing tone classification models are typically evaluated against transcription labels that indicate the intended tone. However, in a CAPT context, what matters is whether the model's assessment agrees with how a human expert perceives the learner's pronunciation quality. There is a lack of evaluation frameworks that align model predictions with \textbf{expert phonetic assessments}, making it difficult to judge whether a classifier is genuinely useful as a pronunciation feedback tool.
+
+\section{Goals of the Thesis}
+\label{sec:intro:goals}
+
+Accordingly, this thesis compares CNN-based and SSL-based models for Mandarin tone classification on recordings produced by Polish learners and examines how closely model predictions align with expert judgements. This objective is pursued through the following specific tasks:
+
+\begin{enumerate}
+  \item Compare six tone classification setups---a CNN baseline trained on mel-spectrograms, four Wav2Vec~2.0 variants differing in their pre-training data (no pre-training, AISHELL-1 native speech~\cite{bu2017aishell}, AISHELL-1 combined with OMPAL learner speech~\cite{hsieh2025ompal}, and a Chinese-specific checkpoint), and one HuBERT variant---on recordings of Polish learners of Mandarin.
+  \item Determine which pre-training strategy and model architecture yield the highest classification accuracy on non-native tone productions.
+  \item Evaluate the agreement between model predictions and expert phonetic assessments to establish whether the models' judgements align with qualified human evaluation.
+  \item Provide practical guidance for integrating the best-performing model into a CAPT pipeline for Mandarin tone training.
+\end{enumerate}
+
+\section{Outline of the Thesis}
+\label{sec:intro:outline}
+
+The remainder of this thesis is organised as follows. Chapter~\ref{chapter:2_StateOfTheArt} reviews the state of the art in Mandarin tone phonology, second-language tone acquisition, computer-assisted pronunciation training, and self-supervised speech representation learning. Chapter~\ref{chapter:3_Proposal} formalises the problem statement, defines the functional and non-functional requirements of the proposed system, and establishes acceptance criteria for the experimental evaluation. Chapter~\ref{chapter:4_Design} describes the system architecture, the design of each classification model, and the data collection and preprocessing pipeline. Chapter~\ref{chapter:5_Experiments} presents the six experimental setups, reports results including accuracy, confusion matrices, and agreement with expert evaluation, and provides a comparative analysis. Finally, Chapter~\ref{chapter:6_Summary} summarises the main findings, discusses limitations, and proposes directions for future work.

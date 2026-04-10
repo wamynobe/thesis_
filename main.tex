@@ -1,0 +1,50 @@
+%% ============================================================
+%% Main thesis file
+%% please use lualatex to compile
+%% ============================================================
+\documentclass{_formatting}
+
+%% bibliography
+\addbibresource{_bibliography.bib}
+
+%% custom commands and macros
+\input{preamble/macros}
+
+\begin{document}
+\includepdf{pages/myGUT.pdf}
+\include{pages/3_abstract_ENG}
+\include{pages/4_abstract_PL}
+\include{pages/5_symbols}
+
+%% Table of contents
+\renewcommand{\contentsname}{Table of contents}
+\tableofcontents{}\label{page:Table_of_contents}
+\addcontentsline{toc}{chapter}{Table of contents}
+
+%% chapters
+\include{chapters/1_introduction}
+\include{chapters/2_state_of_the_art}
+\include{chapters/3_proposal}
+\include{chapters/4_design_implementation}
+\include{chapters/5_experiments}
+\include{chapters/6_summary}
+
+%% bibliography
+\printbibliography\label{page:Bibliography}
+\addcontentsline{toc}{chapter}{Bibliography}
+
+%% List of figures
+\renewcommand{\listfigurename}{List of figures}
+\listoffigures
+\addcontentsline{toc}{chapter}{List of figures}
+
+%% List of tables
+\renewcommand{\listtablename}{List of tables}
+\listoftables
+\addcontentsline{toc}{chapter}{List of tables}
+
+%% Appendices
+\include{appendices/_formatting}
+\appendix
+\include{appendices/A_appendix}
+\end{document}
