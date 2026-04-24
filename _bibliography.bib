@@ -1,8 +1,8 @@
 %% ============================================================
-%% Bibliographic database (BibLaTeX / iso-numeric style)
-%% Target: 30-40+ references in final thesis
+%% Bibliographic database and summarization of the literature
 %% ============================================================
 
+%improve CAPT by combining APA and MDD tasks into a single model called HMamba
 @inproceedings{chao-chen-2025-towards,
   title     = {Towards Efficient and Multifaceted Computer-assisted Pronunciation Training Leveraging Hierarchical Selective State Space Model and Decoupled Cross-entropy Loss},
   author    = {Chao, Fu-An  and
@@ -22,6 +22,11 @@
   abstract  = {Prior efforts in building computer-assisted pronunciation training (CAPT) systems often treat automatic pronunciation assessment (APA) and mispronunciation detection and diagnosis (MDD) as separate fronts: the former aims to provide multiple pronunciation aspect scores across diverse linguistic levels, while the latter focuses instead on pinpointing the precise phonetic pronunciation errors made by non-native language learners. However, it is generally expected that a full-fledged CAPT system should perform both functionalities simultaneously and efficiently. In response to this surging demand, we in this work first propose HMamba, a novel CAPT approach that seamlessly integrates APA and MDD tasks in parallel. In addition, we introduce a novel loss function, decoupled cross-entropy loss (deXent), specifically tailored for MDD to facilitate better-supervised learning for detecting mispronounced phones, thereby enhancing overall performance. A comprehensive set of empirical results on the speechocean762 benchmark dataset demonstrates the effectiveness of our approach on APA. Notably, our proposed approach also yields a considerable improvement in MDD performance over a strong baseline, achieving an F1-score of 63.85{\%}. Our codes are made available at https://github.com/Fuann/hmamba}
 }
 
+%Develop a pronunciation assessment model for open response scenarios, called MultiPA
+%where user can speak freely instead of reading predefined text
+%evaluate sentence level pronunciation accuracy and also word level
+%ASR generated transcript, a second one approximate target transcript, charsiu for allignment
+%trained jointly with sentence and word level score to share representation across tasks to improve perf
 @inproceedings{chen2024multipa,
   title     = {{MultiPA: A Multi-task Speech Pronunciation Assessment Model for Open Response Scenarios}},
   author    = {Yu-Wen Chen and Zhou Yu and Julia Hirschberg},
@@ -32,6 +37,12 @@
   issn      = {2958-1796}
 }
 
+%core idea is to replace raw pitch contour with a more robust representation called tone value representation
+%convert contour into 4 dimensional vector(mean, slope, acceleration, curvature)
+%A transformer-based neural network
+%Input: Spectrogram centered on a syllable
+%Output: The 4 dimensional tone representation vector
+%The predicted vector is used to reconstruct a predicted pitch contour
 @inproceedings{li2024tone,
   title     = {{Tone Value Representation for Computer-Assisted Pronunciation Training}},
   author    = {Wu-Hao Li and Te-Hsin Liu and Chen-Yu Chiang},
@@ -42,6 +53,7 @@
   issn      = {2333-2042}
 }
 
+%wav2vec 2.0 with cross-entropy loss instead of CTC loss
 @inproceedings{yuan2023,
   title     = {{Improved Contextualized Speech Representations for Tonal Analysis}},
   author    = {Jiahong Yuan and Xingyu Cai and Kenneth Church},
@@ -51,7 +63,10 @@
   doi       = {10.21437/Interspeech.2023-283},
   issn      = {2958-1796}
 }
-
+%middle layer most informative
+%finetuning improves lexical features(tone, stress)
+%HuBERT, Wavlm behave similarly to wav2vec 2.0
+%SSL model pretrained on Mandarin represented suprasegmental features more accurately than models pre-trained on other languages in contextual layers
 @inproceedings{delafuente2024,
   title     = {{A layer-wise analysis of Mandarin and English suprasegmentals in SSL speech models}},
   author    = {Anton {de la Fuente} and Dan Jurafsky},
@@ -62,6 +77,11 @@
   issn      = {2958-1796}
 }
 
+%how Polish learners acquire Mandarin tones, compared to native Mandarin speakers
+%specifically in two-syllable words
+%collect data from L2 Polish learners and Taiwanese Mandarin speakers
+%mixture random effects model
+%Polish learners struggle significantly with T1 and T2
 @article{chu2024statistical,
   author  = {Chu, Man-Ni and Chang, Carson and Lin, Hui-Wen},
   title   = {Statistical Analysis of Tonal Acquisition in Disyllabic Words among Polish Learners of Mandarin: A Comparative Study},
@@ -83,7 +103,8 @@
   doi       = {10.1109/ICSDA.2017.8384449}
 }
 
-
+%introduce OMPAL an opensource corpus for Mandarin pronunciation assessment include L2 speakers
+%include word level pronunciation(sounds and tones) and sentence level fluency
 @inproceedings{hsieh2025ompal,
   title     = {{OMPAL: Bridging Speech and Learning with an Open-Source Mandarin Pronunciation Assessment Corpus for Global Learners}},
   author    = {Wen-Wei Hsieh and Hao-Wei Chi and Kuan-Chen Wang and Ping-Cheng Yeh and Te-hsin Liu and Chen-Yu Chiang},
@@ -144,24 +165,51 @@
   doi     = {10.1109/TASLP.2021.3122291}
 }
 
-@book{duanmu2007,
-  author    = {San Duanmu},
-  title     = {The Phonology of Standard {C}hinese},
-  publisher = {Oxford University Press},
-  edition   = {2nd},
-  year      = {2007},
-  isbn      = {978-0-19-921578-2}
+%Also listed Chao value
+@article{huang2011language,
+  author  = {Huang, Tsan and Johnson, Keith},
+  title   = {Language Specificity in Speech Perception: Perception of {Mandarin} Tones by Native and Nonnative Listeners},
+  journal = {Phonetica},
+  volume  = {67},
+  number  = {4},
+  pages   = {243--267},
+  year    = {2011},
+  doi     = {10.1159/000327392},
+  url     = {https://pmc.ncbi.nlm.nih.gov/articles/PMC7077082/}
 }
 
-@book{yip2002,
-  author    = {Moira Yip},
-  title     = {Tone},
-  publisher = {Cambridge University Press},
-  series    = {Cambridge Textbooks in Linguistics},
-  year      = {2002},
-  isbn      = {978-0-521-77314-0}
+%how to deal with tone 3 sandhi in verb reduplication and lexical compounds
+%plus clarify four-way tonal language with neutral tone
+@article{gao2021processing,
+  author   = {Gao, Feier  and Lyu, Siqi  and Lin, Chien-Jer Charles },
+  title    = {Processing Mandarin Tone 3 Sandhi at the Morphosyntactic Interface: Reduplication and Lexical Compounds},
+  journal  = {Frontiers in Psychology},
+  volume   = {Volume 12 - 2021},
+  year     = {2021},
+  url      = {https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2021.713665},
+  doi      = {10.3389/fpsyg.2021.713665},
+  issn     = {1664-1078},
+  abstract = {Mandarin tone 3 sandhi is a phonological alternation in which the initial tone 3 (i.e., low tone) syllable changes to a tone 2 (i.e., rising tone) when followed by another tone 3. The present study used a cross-modal syllable-morpheme matching experiment to examine how native speakers process the sandhi sequences derived from verb reduplication and compounding, respectively. Embedded in a visually-presented sentential context, a disyllabic sequence containing a sandhi target was displayed simultaneously with a monosyllabic audio, either a tone 1 (i.e., high-level tone), tone 2 (i.e., rising tone) or tone 3 (i.e., low tone), and participants judged whether the audio syllable matched with the visual morpheme. Results showed that the tone 3 sandhi was processed differently in the two constructions. The underlying and the surface tone were co-activated and competed with each other in sandhi compounds whereas predominant activation of the underlying tone, over the surface tone, was observed in reduplication. The processing of tone 3 sandhi offers support for distinctive morphological structures: a lexical compound is represented both as a whole-word unit and as a combination of two individual morphemes whereas a verb reduplication is represented and accessed as a monomorphemic unit in the mental lexicon.}
 }
 
+%L2 learners có low productivity với T3 sandhi
+%nhưng không có pattern tương tự với Half-T3 sandhi
+@article{qin2022sandhi,
+title = {The Second-Language Productivity of Two Mandarin Tone Sandhi Patterns},
+journal = {Speech Communication},
+volume = {138},
+pages = {98-109},
+year = {2022},
+issn = {0167-6393},
+doi = {https://doi.org/10.1016/j.specom.2022.02.009},
+url = {https://www.sciencedirect.com/science/article/pii/S0167639322000322},
+author = {Zhen Qin},
+keywords = {Productivity, wug test, third tone sandhi (T3 sandhi), half-T3 sandhi, second-language proficiency},
+abstract = {This study investigates whether the phonetic motivation of two Mandarin tone sandhi patterns influences second-language (L2) learners’ productivity in novel words. Research has suggested that the Mandarin third tone sandhi (T3 sandhi) and Half-T3 sandhi might pose different learning challenges for L2 learners, but there is no evidence that phonetic motivation influences L2 learners’ productive application of the tone sandhi rules. This study re-examines L2 learners’ productive application of the two sandhi patterns and further tests whether their productivity patterns change with increasing Mandarin proficiency. Native Mandarin speakers and Korean-speaking learners of Mandarin with high and low proficiency levels completed a wug production experiment that included both real and novel Mandarin disyllabic words. The results of a comparison of real and novel words showed a low productivity of the T3 sandhi among the L2 learners, but no such pattern was found for the Half-T3 sandhi. The differences in the productivity of the two sandhi patterns for L2 learners did not change with increasing Mandarin proficiency, although there was a difference in the production of novel words involving the T3 sandhi, which may be explained by improved metalinguistic knowledge. These results indicated the relevance of phonetic motivation to L2 productivity of the tone sandhi patterns in Mandarin.}
+}
+
+%compare tone production of L2 learners and Cantonese speakers
+%having a tonal native language does not guarantee better learning of Mandarin tones
 @article{hao2012,
   author  = {Yen-Chen Hao},
   title   = {Second Language Acquisition of {M}andarin {C}hinese Tones by Tonal and Non-Tonal Language Speakers},
@@ -172,6 +220,7 @@
   year    = {2012},
   doi     = {10.1016/j.wocn.2011.11.001}
 }
+
 
 @article{rogerson2021,
   author  = {Pamela M. Rogerson-Revell},
@@ -190,4 +239,87 @@
   booktitle = {Proceedings of the 7th International Conference on Spoken Language Processing (ICSLP 2002)},
   year      = {2002},
   doi       = {10.21437/ICSLP.2002-246}
+}
+
+@article{levis2007,
+  author  = {John M. Levis},
+  title   = {Computer Technology in Teaching and Researching Pronunciation},
+  journal = {Annual Review of Applied Linguistics},
+  volume  = {27},
+  pages   = {184--202},
+  year    = {2007},
+  doi     = {10.1017/S0267190508070098}
+}
+
+%overview about CAPT, good potential but not good enough for real-world communication
+%30 studies from 1999-2022
+%most studies focus on single segmentatals
+%new tech but old pedagogy
+%limited research targets
+@article{zolnay2024,
+  title   = {Computer-assisted pronunciation training: A systematic review},
+  volume  = {37},
+  doi     = {10.1017/S0958344024000181},
+  number  = {1},
+  journal = {ReCALL},
+  author  = {Amrate, Moustafa and Tsai, Pi-hua},
+  year    = {2025},
+  pages   = {22–42}
+}
+
+%using siamese network and resnet to evaluate tone pronunciation accuracy
+%input is two syllables of learner and native, then get the f0 and biến thành 2 dạng vector (1d) và ảnh (2d)
+%sau đó dùng model để đo sự khác biệt giữa 2 tone
+@article{siamese2025,
+  title        = {Evaluating Mandarin tone pronunciation accuracy for second language learners using a {ResNet}-based Siamese network},
+  volume       = {15},
+  issn         = {2045-2322},
+  url          = {https://doi.org/10.1038/s41598-025-08544-8},
+  doi          = {10.1038/s41598-025-08544-8},
+  abstract     = {Evaluating tone pronunciation is essential for helping second-language (L2) learners master the intricate nuances of Mandarin tones. This article introduces an innovative automatic evaluation method for Mandarin tone pronunciation that employs a Siamese network ({SN}), which integrates two branch networks with a modified architecture specifically designed for large-scale image recognition tasks. We compiled a specialized corpus utilizing open-access and meticulously curated Mandarin corpora to develop our model, including standard-accented and non-standard-accented Mandarin speech. We extracted the pitch contour for each Mandarin syllable and applied Local Weighted Regression to smooth it. The resulting smooth pitch contour was normalized on a scale from 0 to 5, adhering to a five-level tone scale. We identified two key features from the normalized pitch contour: a 40D vector (1D feature) and a \$\$40 {\textbackslash}times 50\$\$binary pixel image (2D feature), effectively capturing each syllable’s tonal characteristics. During the training phase, the {SN} was trained using paired tone features from two syllables and a label indicating whether their tones matched. This setup allowed the network to assess discrepancies between the paired tones, accurately identifying tone pronunciation errors relative to standard-accented Mandarin syllables. In the testing phase, we input the tone features of two syllables into the {SN} to evaluate the degree of discrepancy between their tones. To ensure the reliability of our approach, we conducted experiments with several models, including {ResNet}-18, {VGG}-16, {AlexNet}, and a custom-designed baseline. We evaluated the 1D and 2D features through a series of specially designed subjective and objective assessments to measure our model’s effectiveness in predicting tone discrepancies. The results from our experiments across various models demonstrate that our proposed method effectively assesses tone discrepancies. The versatility of our approach is highlighted by the compatibility of both the 1D and 2D features with multiple models, with the 2D features showing exceptional consistency when paired with {ResNet}-18. In subjective evaluations, our model achieved a Mean Squared Error ({MSE}) of 2.295 and a Root Mean Squared Error ({RMSE}) of 1.515 compared to expert assessments. We recorded an {MSE} of 0.189 and an {RMSE} of 0.435 in objective evaluations. {ResNet}-18 exhibited remarkable stability and effectiveness when integrated with 2D features, laying a solid foundation for future research in tone evaluation aimed at Mandarin L2 learners.},
+  pages        = {24558},
+  number       = {1},
+  journaltitle = {Scientific Reports},
+  shortjournal = {Scientific Reports},
+  author       = {Bu, Xiaolong and Guo, Weitong and Yang, Hongwu and Lu, Xiaoyong and He, Yanshan and Xu, Hongwen and Kong, Weining},
+  date         = {2025-07-08}
+}
+
+@inproceedings{zhang2022wenetspeech,
+  author    = {Binbin Zhang and Hang Lv and Pengcheng Guo and Qijie Shao and Chao Yang and Lei Xie and Xin Xu and Hui Bu and Xiaoyu Chen and Chenchen Zeng and Di Wu and Zhendong Peng},
+  title     = {{WenetSpeech}: A 10000+ Hours Multi-Domain {M}andarin Corpus for Speech Recognition},
+  booktitle = {Proceedings of {ICASSP} 2022},
+  year      = {2022},
+  pages     = {6182--6186},
+  doi       = {10.1109/ICASSP43922.2022.9746682}
+}
+
+@online{tencentgamemate2022,
+  author  = {Pengcheng Guo and Shixing Liu},
+  title   = {chinese\_speech\_pretrain},
+  year    = {2022},
+  url     = {https://github.com/TencentGameMate/chinese_speech_pretrain},
+  urldate = {2026-04-13},
+  note    = {GitHub repository}
+}
+
+@article{zajdler2021,
+  author  = {Ewa Zajdler},
+  title   = {Between Sound and Voice: Teaching {C}hinese Tones to Non-Tonal Language Speakers},
+  journal = {Roczniki Humanistyczne},
+  volume  = {69},
+  number  = {9},
+  pages   = {141--158},
+  year    = {2021},
+  doi     = {10.18290/rh21699-7}
+}
+
+@inproceedings{zhang2021speechocean,
+  author    = {Junbo Zhang and Zhiwen Zhang and Yongqing Wang and Zhiyong Yan and Qiong Song and Yukai Huang and Ke Li and Daniel Povey and Yujun Wang},
+  title     = {speechocean762: An Open-Source Non-Native {E}nglish Speech Corpus for Pronunciation Assessment},
+  booktitle = {{Interspeech 2021}},
+  year      = {2021},
+  pages     = {3710--3714},
+  doi       = {10.21437/Interspeech.2021-1893},
+  issn      = {2958-1796}
 }

@@ -4,29 +4,126 @@
 
 \chapter{State-of-the-Art}\label{chapter:2_StateOfTheArt}
 
+This chapter surveys the literature that underpins the present work. Section~\ref{sec:sota:capt} reviews the development of computer-assisted pronunciation training systems, with particular attention to feedback mechanisms and recent multitask architectures. Section~\ref{sec:sota:cnn} introduces Mandarin tonal phonology and describes CNN-based tone classification methods. Section~\ref{sec:sota:ssl} presents self-supervised speech models---Wav2Vec~2.0 and HuBERT---and their application to tonal analysis. Section~\ref{sec:sota:l2} examines research on second-language Mandarin tone acquisition, focusing on learners from non-tonal language backgrounds and, where available, on Polish speakers specifically. Section~\ref{sec:sota:datasets} describes the speech corpora and benchmarks relevant to this thesis. Finally, Section~\ref{sec:sota:gaps} synthesises the identified gaps that motivate the experimental design presented in subsequent chapters.
+
 \section{Computer-Assisted Pronunciation Training}
 \label{sec:sota:capt}
+
+\subsection{Foundations and feedback mechanisms}
+
+Computer-Assisted Pronunciation Training (CAPT) refers to any technology-mediated system that provides learners with feedback on their spoken production. Early CAPT research focused on how computer systems could deliver pronunciation feedback in pedagogically useful ways, including visual displays of speech and other technology-mediated feedback channels~\cite{neri2002,levis2007}. Neri et~al.~\cite{neri2002} argued that many commercial systems favoured technological novelty over pedagogical usefulness, while Levis~\cite{levis2007} identified three persistent challenges: defining appropriate pedagogical goals, generating useful automatic feedback, and diagnosing specific pronunciation errors. These challenges have shaped CAPT research for over two decades.
+
+With the maturation of automatic speech recognition (ASR), CAPT systems began to incorporate forced alignment and confidence scoring to pinpoint mispronounced segments~\cite{rogerson2021}. Instead of displaying waveforms, modern systems can highlight individual phonemes or prosodic units that deviate from native norms, offering feedback that is both more precise and more actionable. Rogerson-Revell~\cite{rogerson2021} reviewed the current state of CAPT and noted that, despite significant technological progress, most systems still rely heavily on listen-and-repeat drilling, and assessment frequently depends on human raters rather than fully automated measures.
+
+A recent systematic review by Amrate and Tsai~\cite{zolnay2024} analysed 30~peer-reviewed CAPT studies published between 1999 and 2022 and found that the field is dominated by research on adult English learners and segmental features (vowels and consonants). Suprasegmental aspects of pronunciation---stress, intonation, rhythm, and, critically for this thesis, \emph{lexical tone}---have received comparatively little attention in CAPT research. This gap is particularly significant for tonal languages such as Mandarin, where suprasegmental errors can change word meaning entirely.
+
+\subsection{Modern multitask and tone-aware CAPT}
+
+Recent work has moved toward multitask architectures that integrate automatic pronunciation assessment (APA) with mispronunciation detection and diagnosis (MDD) in a single model. Chao and Chen~\cite{chao-chen-2025-towards} proposed HMamba, a hierarchical selective state-space model that performs APA and MDD in parallel. Evaluated on the speechocean762 benchmark, HMamba achieved an MDD F1-score of 63.85\%, demonstrating the viability of joint scoring and error localisation. Similarly, Chen et~al.~\cite{chen2024multipa} introduced MultiPA, a multi-task model designed for open-response scenarios where the learner's utterance does not follow a fixed script, extending CAPT beyond the traditional read-aloud paradigm.
+
+In the specific domain of Mandarin tone training, Li et~al.~\cite{li2024tone} proposed a tone-value representation that normalises pitch contours into a 4 dimensional vector(mean, slope, acceleration, curvature) onto a five-level scale, reducing the effects of speaker-dependent pitch range and coarticulatory variation. This representation enables more robust visual and computational diagnosis of tone-category errors, bringing CAPT closer to the goal of providing precise, tone-level feedback.
+
+\subsection{Limitations relevant to this thesis}
+
+Despite these advances, two limitations stand out. First, the systematic review by Amrate and Tsai~\cite{zolnay2024} confirms that CAPT research overwhelmingly addresses English pronunciation; Mandarin tone training remains underrepresented in the literature, and dedicated evaluation on non-native learner populations other than Chinese L1 speakers is scarce. Second, most current CAPT systems evaluate their internal classifiers against transcription labels rather than expert perceptual judgements, leaving open the question of whether the system's assessment corresponds to what a human instructor would consider correct or incorrect.
 
 \section{Tone Classification: CNN-Based Approaches}
 \label{sec:sota:cnn}
 
+\subsection{Mandarin tonal phonology}
+
+Standard Mandarin possesses four lexical tones and one neutral (unstressed) tone. Following the Chao five-level pitch notation, the four full tones are commonly transcribed as: Tone~1 (T1, high level, 55), Tone~2 (T2, mid rising, 35), Tone~3 (T3, low dipping, 214), and Tone~4 (T4, high falling, 51)~\cite{huang2011language,gao2021processing}. Because the same segmental sequence can carry different meanings depending on its tone, accurate tone production and perception are essential for intelligible communication.
+
+In connected speech, tones undergo contextual modifications known as \emph{tone sandhi}. The most prominent sandhi rule in Mandarin is the T3 sandhi: when two T3 syllables occur in sequence, the first T3 is realised as a rising contour that closely resembles T2~\cite{huang2011language,gao2021processing}. Additionally, a T3 syllable followed by a non-T3 full tone is typically shortened to a low-falling contour, a phenomenon referred to as \emph{half-T3}~\cite{qin2022sandhi}. These processes create substantial surface variation that complicates automatic tone classification, since the acoustic realisation of a tone depends on its prosodic context.
+
+\subsection{CNN classifiers on pitch contours}
+
+Early neural approaches to Mandarin tone classification applied convolutional neural networks (CNNs) to features derived from the fundamental frequency (F0) contour. Chen et~al.~\cite{chen2016cnn} extracted pitch-contour representations from isolated syllables and trained a CNN to classify the four lexical tones. Operating on F0-oriented features rather than full spectral information, their system demonstrated that CNNs could learn discriminative tonal patterns directly from pitch data, achieving high accuracy on carefully segmented single-syllable recordings.
+
+\subsection{CNN classifiers on mel-spectrograms}
+
+An alternative line of work replaced explicit pitch extraction with mel-spectrogram inputs, framing tone classification as a two-dimensional pattern recognition task analogous to image classification. Gao et~al.~\cite{gao2019tonenet} proposed ToneNet, a CNN that operates on mel-spectrogram representations and achieved 99.16\% accuracy on the Syllable Corpus of Standard Chinese under clean conditions; accuracy decreased to 97.07\% when Gaussian noise was added, indicating some sensitivity to acoustic degradation. More recently, Bu et~al.~\cite{siamese2025} introduced a ResNet-based Siamese network for Mandarin tone evaluation that uses two representations derived from normalised pitch contours: a 40-dimensional vector and a $40 \times 50$ binary image.
+
+\subsection{Limitations of CNN approaches}
+
+While CNN-based classifiers achieve high accuracy on controlled, single-syllable data, several limitations hinder their applicability to learner speech assessment. First, they require either explicit F0 extraction (which is error-prone in noisy or non-native speech) or fixed-size spectrogram windows, both of which impose assumptions about segmentation and feature relevance. Second, the restricted receptive field of standard CNNs makes it difficult to model the long-range coarticulatory and sandhi effects that characterise natural Mandarin speech. Third, because these models are trained from scratch, they cannot leverage unlabelled data and tend to generalise poorly to unseen speakers, recording conditions, and---most importantly for this thesis---the high acoustic variability typical of learner speech.
+
 \section{Tone Classification: Self-Supervised Models}
 \label{sec:sota:ssl}
 
-%%yuan2023,delafuente2024
-\todo{Sẽ review fine-tuning với Wav2Vec~2.0 và HuBERT}
+\subsection{Wav2Vec 2.0}
+
+Wav2Vec~2.0~\cite{baevski2020} is a self-supervised framework for learning speech representations from raw audio. Its architecture comprises three components: (1)~a \emph{feature encoder} consisting of seven temporal convolutional layers that maps 16\,kHz waveforms to latent representations at a 20\,ms stride; (2)~a \emph{context network} implemented as a Transformer encoder that builds contextualised representations over the full utterance; and (3)~a \emph{quantisation module} that discretises the latent representations via a Gumbel-Softmax operation, producing a codebook of speech units.
+
+During pre-training, spans of the latent representations are masked and the model is trained with a contrastive loss to identify the true quantised representation among a set of distractors. This objective encourages the Transformer to capture both local acoustic structure and longer-range linguistic dependencies without requiring any labelled data. After pre-training, the model is fine-tuned on a downstream task---typically speech recognition with a Connectionist Temporal Classification (CTC) loss---using a comparatively small amount of labelled data. On the Librispeech benchmark, Wav2Vec~2.0 achieved a word error rate of 1.8/3.3\% on the clean/other test sets with full labelled data, and 4.8/8.2\% using only 10~minutes of labelled data combined with 53\,000~hours of unlabelled pre-training~\cite{baevski2020}.
+
+\subsection{HuBERT}
+
+HuBERT (Hidden-Unit BERT)~\cite{hsu2021} takes a different approach to self-supervised speech learning. Rather than contrastive learning with quantised targets, HuBERT uses an offline clustering step---simple k-means applied to MFCC or intermediate representations---to generate discrete pseudo-labels for each frame. The model is then trained with a BERT-style masked prediction objective: portions of the input are masked, and the model predicts the cluster assignment of each masked frame. Crucially, the prediction loss is applied \emph{only} over the masked regions, forcing the model to build useful representations of the unmasked context in order to predict the masked targets.
+
+A key insight of HuBERT is that the quality of the initial cluster assignments matters less than their consistency: even noisy pseudo-labels provide a sufficient training signal as long as the clustering is deterministic. Training proceeds iteratively---after the first round, intermediate representations from the trained model are re-clustered to produce higher-quality pseudo-labels for a second round of pre-training. With a 1-billion-parameter model, HuBERT matched or exceeded Wav2Vec~2.0 performance across Librispeech and Libri-light benchmarks~\cite{hsu2021}.
+
+\subsection{SSL representations for Mandarin tonal analysis}
+
+Several recent studies have investigated how well SSL speech models encode suprasegmental information relevant to Mandarin tone. De~la~Fuente and Jurafsky~\cite{delafuente2024} conducted a layer-wise probing analysis of Wav2Vec~2.0, HuBERT, and WavLM, measuring the accuracy of linear classifiers trained on each layer's representations to predict Mandarin lexical tone and English stress/accent. They found that tonal information is most strongly encoded in the middle third of the network in pre-trained models, and that fine-tuning shifts this information toward later layers. Importantly, models pre-trained on language-matched data (i.e., Mandarin audio) represented suprasegmental features more accurately than models pre-trained on other languages, with the difference driven primarily by enriched contextual representations in the Transformer blocks rather than local acoustic features in the convolutional encoder.
+
+Yuan et~al.~\cite{yuan2023} fine-tuned Wav2Vec~2.0 with a cross-entropy loss for frame-by-frame Mandarin tone classification and showed that the resulting representations both improve tone classification accuracy and remain suitable for analysing tone-sandhi patterns in connected speech. Their analysis further suggests that third-tone sandhi is better described as a continuous shift from T3 toward T2 than as a categorical replacement.
+
+\subsection{Chinese-specific pre-trained checkpoints}
+
+The effectiveness of SSL models depends on the quantity and linguistic match of the pre-training data. WenetSpeech provides more than 10\,000~hours of multi-domain Mandarin speech drawn from sources such as YouTube and podcasts, covering domains including audiobooks, documentaries, interviews, and news broadcasts~\cite{zhang2022wenetspeech}. This corpus was later used by the TencentGameMate project to release Chinese-specific Wav2Vec~2.0 and HuBERT checkpoints in both Base and Large configurations~\cite{tencentgamemate2022}. According to the project documentation, when these pretrained representations were used as features in a downstream ASR system on AISHELL-1, the Chinese HuBERT-Large setup achieved a character error rate of 3.3\% on the test set~\cite{tencentgamemate2022}.
+
+The availability of these language-matched checkpoints is directly relevant to this thesis: two of the six experimental setups (described in Chapter~\ref{chapter:4_Design}) use the Chinese Wav2Vec~2.0-Large and Chinese HuBERT-Large checkpoints as starting points for fine-tuning on the learner tone classification task. The layer-wise probing evidence from de~la~Fuente and Jurafsky~\cite{delafuente2024} suggests that such language-matched pre-training should yield richer tonal representations compared with English-only or randomly initialised models.
+
 \section{L2 Mandarin Tone Acquisition}
 \label{sec:sota:l2}
-%chu2024statistical
-\todo{Tóm tắt nghiên cứu cách phát âm của non native speaker, đặc biệt Polish}
+
+\subsection{General difficulties for non-tonal-L1 learners}
+
+For speakers of non-tonal languages, learning to perceive and produce Mandarin lexical tones presents a qualitatively different challenge from learning segmental contrasts. In non-tonal languages such as English, French, or Polish, fundamental frequency variation at the syllable level serves prosodic functions---marking sentence-level intonation, stress, or focus---but does not distinguish lexical items. Mandarin requires learners to treat syllable-level pitch contours as lexically contrastive, a mapping that is absent from their native phonological system~\cite{hao2012}.
+
+Hao~\cite{hao2012} conducted a perception and production study comparing English-speaking (non-tonal L1) and Cantonese-speaking (tonal L1) learners of Mandarin. Both groups performed comparably on tone imitation tasks, suggesting that the motor execution of pitch contours is not the primary obstacle. Instead, the difficulty lies in associating pitch contours with discrete tonal categories---a mapping problem rather than a production problem. Across non-tonal learner populations, the T2/T3 contrast has been consistently identified as the most confusable pair, because both tones begin in the low-pitch region and differ primarily in the direction and timing of the subsequent pitch movement~\cite{hao2012}.
+
+\subsection{Polish learners of Mandarin}
+
+Research specifically targeting Polish learners of Mandarin is limited but growing. Chu et~al.~\cite{chu2024statistical} conducted a statistical analysis of tonal acquisition in disyllabic words, comparing the F0 trajectories of Polish learners with those of native Mandarin speakers. Their results showed that Polish learners exhibited systematic differences in both pitch height and contour shape across all four tones, with inter-tone distinctions being less clearly separated than in native productions. This finding is consistent with the broader literature on non-tonal L1 learners but provides the detailed quantitative acoustic characterisation for the Polish population specifically. Importantly, Chu et~al.'s study is purely descriptive---it characterises acoustic differences but does not build or evaluate any automatic classification model.
+
+Zajdler~\cite{zajdler2021} analysed the tonal productions of Polish female students at two stages of learning, comparing them with the productions of a female native speaker of Mandarin from Taiwan. The study examined pitch, F0 contour, and register span in selected read passages and, before presenting the learner data, contrasted the simplified tone model used in instruction with the acoustic properties of native productions. This comparison suggests that classroom descriptions of Mandarin tones do not fully capture the variability present in naturally produced speech.
+
+\subsection{Implications for automatic tone assessment}
+
+Two implications follow from the L2 acquisition literature. First, learner speech exhibits substantially higher inter-speaker variability than native speech, because learners at different proficiency levels produce different approximations of the target tones. Any tone classification model intended for learner assessment must therefore be robust to this variability. Second, the systematic but population-specific error patterns reported for Polish learners indicate that models should ideally be evaluated on data produced by the target L1 population, rather than assuming that results obtained on native speakers or learners with different L1 backgrounds will generalise.
 
 \section{Datasets and Benchmarks}
 \label{sec:sota:datasets}
 
-%%bu2017aishell,hsieh2025ompal
-\todo{Nói về các dataset aishell1 và ompal}
+This section describes the speech corpora used or referenced in this thesis.
+
+\subsection{AISHELL-1}
+
+AISHELL-1~\cite{bu2017aishell} is an open-source Mandarin speech corpus containing approximately 170~hours of read speech recorded by 400~native speakers (214~female, 186~male) from diverse accent regions across China. Recordings were made in quiet indoor environments and captured simultaneously on three devices: a high-fidelity microphone (44.1\,kHz, 16-bit) and two mobile phones (16\,kHz, 16-bit). Transcription accuracy exceeds 95\%. The corpus is divided into training, development, and test splits and is widely used as a benchmark for Mandarin automatic speech recognition. In this thesis, AISHELL-1 serves as the native-speech pre-training corpus for two of the Wav2Vec~2.0 experimental setups.
+
+\subsection{OMPAL}
+
+OMPAL~\cite{hsieh2025ompal} is an open-source Mandarin pronunciation assessment corpus designed specifically for non-native learner speech. It comprises 1\,768~utterances produced by French~L1 learners, each annotated independently by four experts with professional Mandarin teaching experience. Annotations are provided at both the sentence level (accuracy, fluency, and prosody) and the word level (consonant, vowel, and tone correctness). OMPAL is one of very few publicly available Mandarin learner corpora with multi-expert annotations, and it is used in this thesis as supplementary pre-training data in one of the experimental setups (AISHELL-1 + OMPAL).
+
+\subsection{Learner dataset}
+
+The primary evaluation corpus for this thesis consists of recordings from 679~Polish-speaking learners of Mandarin, collected across two stages. Stage~I contains 7\,625~utterances of isolated number words (digits 0--10 and 100). Stage~II contains 9\,425~utterances of everyday vocabulary and short phrases (18~words including common nouns and expressions). Pronunciation quality was assessed by Dr.~Yen~Ying~Ng, a qualified expert in Mandarin phonetics. The full description of this dataset, including its collection procedure, annotation protocol, and statistical characteristics, is deferred to Chapter~\ref{chapter:4_Design}.
+
+\subsection{Speechocean762}
+
+For contextual reference, speechocean762~\cite{zhang2021speechocean} is an open-source corpus of 5\,000~English utterances recorded by 250~non-native speakers (native Mandarin L1), annotated at the phoneme, word, and sentence levels by five independent raters. It is widely used as a benchmark for English pronunciation assessment and mispronunciation detection. Although speechocean762 targets English rather than Mandarin, it illustrates the type of multi-level, multi-rater annotation framework that CAPT research increasingly demands and provides context for the HMamba results discussed in Section~\ref{sec:sota:capt}.
 
 \section{Identified Gaps and Justification}
 \label{sec:sota:gaps}
 
-\todo{Các gaps}
+The literature reviewed in this chapter reveals three gaps that the present thesis aims to address.
+
+\textbf{1.~Population gap.} Existing CAPT and tone classification systems have been developed and evaluated primarily on native Mandarin speakers~\cite{chen2016cnn,gao2019tonenet} or on L2 populations whose first language is itself tonal. The limited work that examines annotated non-native learner speech includes French L1 speakers~\cite{hsieh2025ompal}. For Polish L1 learners, only acoustic analyses exist~\cite{chu2024statistical,zajdler2021}; no automatic tone classification model has been trained or evaluated on this population. Given the population-specific error patterns documented in the acquisition literature, results from other learner groups cannot be assumed to generalise.
+
+\textbf{2.~Model comparison gap.} CNN-based and SSL-based approaches to Mandarin tone classification have been studied independently, but the literature reviewed here does not report a systematic comparison of these paradigms on non-native learner speech. Furthermore, SSL models offer a range of pre-training configurations---trained from scratch, pre-trained on native Mandarin data (AISHELL-1), pre-trained on a mix of native and learner data (AISHELL-1 + OMPAL), or initialised from a Chinese-specific checkpoint---and the relative effectiveness of these strategies for L2 tone classification remains unknown.
+
+\textbf{3.~Expert alignment gap.} Tone classification models are conventionally evaluated against transcription labels that record the \emph{intended} tone. However, in a CAPT context, the relevant criterion is whether the model's output agrees with an expert's \emph{perceptual} judgement of the learner's actual production. None of the systems reviewed in this chapter report model--expert agreement as an evaluation metric.
+
+These three gaps jointly motivate the experimental design presented in Chapter~\ref{chapter:3_Proposal}, which defines the requirements, acceptance criteria, and evaluation framework for a comparative study of six tone classification setups on Polish learner speech with expert-aligned evaluation.
