@@ -32,7 +32,7 @@ The literature reviewed above leaves three issues unresolved for the present stu
 Accordingly, this thesis compares CNN-based and SSL-based models for Mandarin tone classification on recordings produced by Polish learners and examines how closely model predictions align with expert judgements. This objective is pursued through the following specific tasks:
 
 \begin{enumerate}
-  \item Compare five tone classification setups---a CNN baseline trained on mel-spectrograms, three Wav2Vec~2.0 variants differing in their initialisation and adaptation data (learner-only fine-tuning, AISHELL-1 native-speech adaptation~\cite{bu2017aishell}, and a Chinese-specific checkpoint), and one Chinese HuBERT variant---on recordings of Polish learners of Mandarin.
+  \item Compare six tone classification setups---a CNN baseline trained on mel-spectrograms, three Wav2Vec~2.0 variants differing in their initialisation and adaptation data (learner-only fine-tuning, AISHELL-1 native-speech adaptation~\cite{bu2017aishell}, and a Chinese-specific checkpoint), and two Chinese HuBERT variants differing in pooling and loss design---on recordings of Polish learners of Mandarin.
   \item Determine which pre-training strategy and model architecture yield the highest classification accuracy on non-native tone productions.
   \item Evaluate the agreement between model predictions and expert phonetic assessments to establish whether the models' judgements align with qualified human evaluation.
   \item Provide practical guidance for integrating the best-performing model into a CAPT pipeline for Mandarin tone training.
