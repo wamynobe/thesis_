@@ -137,11 +137,14 @@
 \RequirePackage{pdfpages} % insert PDF files
 \RequirePackage{float} % placement control for figures/tables
 \RequirePackage{placeins}
+\RequirePackage{tikz} % vector diagrams (used for architecture figures)
+\usetikzlibrary{positioning,arrows.meta,shapes.geometric,fit,calc,backgrounds,chains}
 \raggedbottom % global bottom align
 
 %% -------------------- Tables / Lists / Mathematics --------------
 \RequirePackage{multirow} % merge cells across rows
 \RequirePackage{tabularx,array} % automatic column widths
+\RequirePackage{booktabs} % high-quality horizontal rules for tables
 
 \RequirePackage{enumerate} % custom numbering
 \RequirePackage{enumitem} % full control of lists
