@@ -246,6 +246,49 @@ Images are split at random in the ToneNet style:
 \section{Training and Evaluation}
 \label{sec:design:implementation}
 
+The experimental code was organised as Jupyter notebooks. Each run saved the
+checkpoints and learning curves needed to inspect the training process. MFA
+supplies the phone alignments, while Librosa and Matplotlib are used for
+exploratory audio and feature plots. The CNN baseline is implemented with
+TensorFlow/Keras, and the SSL models are implemented with PyTorch and Hugging
+Face Transformers.
+
+For SSL training on the learner corpus, each input is a mono 16\,kHz utterance
+and the batch size is one utterance. Optimisation uses AdamW, gradient clipping
+with maximum norm~1.0, and a linear learning-rate warm-up over the first
+1{,}000 updates. During the initial phase, the Transformer stack is frozen; only
+the learned layer weights and the tone-classification head are updated, using a
+learning rate of 0.0001. After 5{,}000 updates, the Transformer layers are
+unfrozen and fine-tuned with learning rate 0.00001, while the convolutional
+feature encoder remains frozen throughout. Each learner fine-tuning run lasts
+30{,}000 updates, with development evaluation every 1{,}000 updates. Checkpoint
+selection uses learner development accuracy for the frame-voting systems and
+learner development macro-F1 for the HuBERT attention model. The AISHELL-1
+intermediate stage follows the same update schedule, but its checkpoint
+selection is based on frame-level development accuracy on native speech.
+
+MFA masks and AISHELL frame labels are stored on a 25\,ms grid, whereas
+Wav2Vec~2.0 and HuBERT produce hidden states on the encoder time axis. The masks
+and labels are therefore mapped to the encoder sequence length using
+nearest-neighbour resampling. For a source sequence of length \(L\) and an
+encoder sequence of length \(F\), encoder frame \(j\) receives source index
+\begin{equation}
+  i_j = \mathrm{round}\!\left(\frac{j(L-1)}{F-1}\right),
+  \qquad j \in \{0,\dots,F-1\}.
+  \label{eq:design:resample}
+\end{equation}
+
+The time- and feature-masking augmentations provided by the Hugging Face
+implementations are disabled by setting the masking probabilities to zero. This
+avoids removing a large proportion of the signal in short learner utterances.
+
+At the end of each experiment, the corresponding notebook saves a JSON summary
+containing the split sizes, the best development score, test-set aggregate
+metrics, per-tone metrics, and the confusion matrix.
+Chapter~\ref{chapter:5_Experiments} uses these summaries to construct the result
+tables.
+
+
 
 \section{Chapter Summary}
 \label{sec:design:summary}
