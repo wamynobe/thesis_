@@ -1,0 +1,20 @@
+{
+  "checkpoint": "label1",
+  "checkpoint_path": "/home/huy/207177/output/checkpoint/exp_label1_ce/best.pt",
+  "pre_test_acc": 0.49876665022200295,
+  "post_test_acc": 0.7693310165073849,
+  "delta": 0.27056436628538194,
+  "pre_eval_info": {
+    "compared": 2027,
+    "skipped_no_csv": 0,
+    "skipped_no_pred": 275
+  },
+  "post_eval_info": {
+    "compared": 2302,
+    "skipped_no_csv": 0,
+    "skipped_no_pred": 0
+  },
+  "train_items": 9021,
+  "test_items": 2302,
+  "saved_last": "/home/huy/207177/output/checkpoint/exp_learner_finetune_from_3ckpt/label1/last.pt"
+}

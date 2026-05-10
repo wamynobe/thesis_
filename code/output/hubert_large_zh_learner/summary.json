@@ -1,0 +1,112 @@
+{
+  "exp_tag": "hubert_large_zh_learner",
+  "pretrained": "TencentGameMate/chinese-hubert-large",
+  "best_dev_acc": 0.8125,
+  "test_acc": 0.7992988606485539,
+  "test_info": {
+    "compared": 2282,
+    "skipped_no_csv": 0,
+    "skipped_no_pred": 0
+  },
+  "train_items": 8577,
+  "dev_items": 464,
+  "test_items": 2282,
+  "save_dir": "/home/huy/207177/output/checkpoint/hubert_large_zh_learner",
+  "training_curves": "/home/huy/207177/output/checkpoint/hubert_large_zh_learner/training_curves.json",
+  "tone_labels": [
+    "0",
+    "1",
+    "2",
+    "3",
+    "4"
+  ],
+  "tone_target_names": [
+    "T5/neutral",
+    "T1",
+    "T2",
+    "T3",
+    "T4"
+  ],
+  "classification_report": {
+    "T5/neutral": {
+      "precision": 0.647887323943662,
+      "recall": 0.5564516129032258,
+      "f1-score": 0.5986984815618221,
+      "support": 248.0
+    },
+    "T1": {
+      "precision": 0.8097982708933718,
+      "recall": 0.8388059701492537,
+      "f1-score": 0.8240469208211144,
+      "support": 670.0
+    },
+    "T2": {
+      "precision": 0.8273972602739726,
+      "recall": 0.825136612021858,
+      "f1-score": 0.826265389876881,
+      "support": 732.0
+    },
+    "T3": {
+      "precision": 0.5205479452054794,
+      "recall": 0.608,
+      "f1-score": 0.5608856088560885,
+      "support": 125.0
+    },
+    "T4": {
+      "precision": 0.8897795591182365,
+      "recall": 0.8757396449704142,
+      "f1-score": 0.882703777335984,
+      "support": 507.0
+    },
+    "accuracy": 0.7992988606485539,
+    "macro avg": {
+      "precision": 0.7390820718869444,
+      "recall": 0.7408267680089504,
+      "f1-score": 0.738520035690378,
+      "support": 2282.0
+    },
+    "weighted avg": {
+      "precision": 0.7997731910520447,
+      "recall": 0.7992988606485539,
+      "f1-score": 0.7988853821138081,
+      "support": 2282.0
+    }
+  },
+  "confusion_matrix": [
+    [
+      138,
+      25,
+      39,
+      23,
+      23
+    ],
+    [
+      19,
+      562,
+      59,
+      10,
+      20
+    ],
+    [
+      34,
+      69,
+      604,
+      22,
+      3
+    ],
+    [
+      11,
+      8,
+      21,
+      76,
+      9
+    ],
+    [
+      11,
+      30,
+      7,
+      15,
+      444
+    ]
+  ]
+}

@@ -1,0 +1,112 @@
+{
+  "exp_tag": "w2v2_large_zh_learner",
+  "pretrained": "TencentGameMate/chinese-wav2vec2-large",
+  "best_dev_acc": 0.7629310344827587,
+  "test_acc": 0.7725679228746714,
+  "test_info": {
+    "compared": 2282,
+    "skipped_no_csv": 0,
+    "skipped_no_pred": 0
+  },
+  "train_items": 8577,
+  "dev_items": 464,
+  "test_items": 2282,
+  "save_dir": "/home/huy/207177/output/checkpoint/w2v2_large_zh_learner",
+  "training_curves": "/home/huy/207177/output/checkpoint/w2v2_large_zh_learner/training_curves.json",
+  "tone_labels": [
+    "0",
+    "1",
+    "2",
+    "3",
+    "4"
+  ],
+  "tone_target_names": [
+    "T5/neutral",
+    "T1",
+    "T2",
+    "T3",
+    "T4"
+  ],
+  "classification_report": {
+    "T5/neutral": {
+      "precision": 0.7209302325581395,
+      "recall": 0.25,
+      "f1-score": 0.3712574850299401,
+      "support": 248.0
+    },
+    "T1": {
+      "precision": 0.7945791726105563,
+      "recall": 0.8313432835820895,
+      "f1-score": 0.812545587162655,
+      "support": 670.0
+    },
+    "T2": {
+      "precision": 0.7440191387559809,
+      "recall": 0.8497267759562842,
+      "f1-score": 0.7933673469387755,
+      "support": 732.0
+    },
+    "T3": {
+      "precision": 0.5918367346938775,
+      "recall": 0.464,
+      "f1-score": 0.5201793721973094,
+      "support": 125.0
+    },
+    "T4": {
+      "precision": 0.8270944741532977,
+      "recall": 0.9151873767258383,
+      "f1-score": 0.8689138576779026,
+      "support": 507.0
+    },
+    "accuracy": 0.7725679228746714,
+    "macro avg": {
+      "precision": 0.7356919505543703,
+      "recall": 0.6620514872528425,
+      "f1-score": 0.6732527298013165,
+      "support": 2282.0
+    },
+    "weighted avg": {
+      "precision": 0.7664755666631576,
+      "recall": 0.7725679228746714,
+      "f1-score": 0.7549448050012919,
+      "support": 2282.0
+    }
+  },
+  "confusion_matrix": [
+    [
+      62,
+      27,
+      91,
+      25,
+      43
+    ],
+    [
+      9,
+      557,
+      73,
+      0,
+      31
+    ],
+    [
+      8,
+      82,
+      622,
+      10,
+      10
+    ],
+    [
+      5,
+      11,
+      38,
+      58,
+      13
+    ],
+    [
+      2,
+      24,
+      12,
+      5,
+      464
+    ]
+  ]
+}

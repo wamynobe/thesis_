@@ -1,0 +1,18 @@
+{
+  "exp_tag": "aishell_label2",
+  "pretrained": "facebook/wav2vec2-large-960h",
+  "best_dev_frame_acc": 0.8911406802334223,
+  "train_items": 33986,
+  "dev_items": 693,
+  "num_labels": 7,
+  "labels": [
+    "C",
+    "T1",
+    "T2",
+    "T3",
+    "T4",
+    "T5",
+    "sil"
+  ],
+  "save_dir": "/home/huy/207177/output/checkpoint/exp_label2_ce"
+}

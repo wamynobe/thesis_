@@ -1,0 +1,202 @@
+{
+  "checkpoint": "label1",
+  "checkpoint_path": "/home/huy/207177/output/checkpoint/exp_label1_ce/best.pt",
+  "pretrained": "facebook/wav2vec2-large-960h",
+  "pre_test_acc": 0.5315179021684316,
+  "post_test_acc": 0.7655565293602103,
+  "delta": 0.2340386271917787,
+  "best_dev_acc": 0.7629310344827587,
+  "pre_eval_info": {
+    "compared": 1983,
+    "skipped_no_csv": 0,
+    "skipped_no_pred": 299
+  },
+  "post_eval_info": {
+    "compared": 2282,
+    "skipped_no_csv": 0,
+    "skipped_no_pred": 0
+  },
+  "pre_classification_report": {
+    "T5/neutral": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1-score": 0.0,
+      "support": 210.0
+    },
+    "T1": {
+      "precision": 0.5167883211678832,
+      "recall": 0.6298932384341637,
+      "f1-score": 0.5677626303127506,
+      "support": 562.0
+    },
+    "T2": {
+      "precision": 0.5612788632326821,
+      "recall": 0.49297971918876754,
+      "f1-score": 0.5249169435215947,
+      "support": 641.0
+    },
+    "T3": {
+      "precision": 0.1640625,
+      "recall": 0.1926605504587156,
+      "f1-score": 0.17721518987341772,
+      "support": 109.0
+    },
+    "T4": {
+      "precision": 0.6019900497512438,
+      "recall": 0.7874186550976139,
+      "f1-score": 0.6823308270676691,
+      "support": 461.0
+    },
+    "accuracy": 0.5315179021684316,
+    "macro avg": {
+      "precision": 0.36882394683036185,
+      "recall": 0.4205904326358521,
+      "f1-score": 0.3904451181550864,
+      "support": 1983.0
+    },
+    "weighted avg": {
+      "precision": 0.47686082363279014,
+      "recall": 0.5315179021684316,
+      "f1-score": 0.498953770049171,
+      "support": 1983.0
+    }
+  },
+  "post_classification_report": {
+    "T5/neutral": {
+      "precision": 0.5740740740740741,
+      "recall": 0.5,
+      "f1-score": 0.5344827586206896,
+      "support": 248.0
+    },
+    "T1": {
+      "precision": 0.8015267175572519,
+      "recall": 0.7835820895522388,
+      "f1-score": 0.7924528301886793,
+      "support": 670.0
+    },
+    "T2": {
+      "precision": 0.800818553888131,
+      "recall": 0.8019125683060109,
+      "f1-score": 0.8013651877133106,
+      "support": 732.0
+    },
+    "T3": {
+      "precision": 0.49056603773584906,
+      "recall": 0.624,
+      "f1-score": 0.5492957746478874,
+      "support": 125.0
+    },
+    "T4": {
+      "precision": 0.8342967244701349,
+      "recall": 0.854043392504931,
+      "f1-score": 0.8440545808966862,
+      "support": 507.0
+    },
+    "accuracy": 0.7655565293602103,
+    "macro avg": {
+      "precision": 0.7002564215450882,
+      "recall": 0.7127076100726362,
+      "f1-score": 0.7043302264134506,
+      "support": 2282.0
+    },
+    "weighted avg": {
+      "precision": 0.7668280659961352,
+      "recall": 0.7655565293602103,
+      "f1-score": 0.7654215960193231,
+      "support": 2282.0
+    }
+  },
+  "pre_confusion_matrix": [
+    [
+      0,
+      43,
+      70,
+      26,
+      71
+    ],
+    [
+      2,
+      354,
+      106,
+      14,
+      86
+    ],
+    [
+      2,
+      226,
+      316,
+      35,
+      62
+    ],
+    [
+      0,
+      13,
+      54,
+      21,
+      21
+    ],
+    [
+      0,
+      49,
+      17,
+      32,
+      363
+    ]
+  ],
+  "post_confusion_matrix": [
+    [
+      124,
+      26,
+      43,
+      29,
+      26
+    ],
+    [
+      28,
+      525,
+      77,
+      7,
+      33
+    ],
+    [
+      36,
+      62,
+      587,
+      28,
+      19
+    ],
+    [
+      14,
+      8,
+      17,
+      78,
+      8
+    ],
+    [
+      14,
+      34,
+      9,
+      17,
+      433
+    ]
+  ],
+  "tone_labels": [
+    "0",
+    "1",
+    "2",
+    "3",
+    "4"
+  ],
+  "tone_target_names": [
+    "T5/neutral",
+    "T1",
+    "T2",
+    "T3",
+    "T4"
+  ],
+  "train_items": 8577,
+  "dev_items": 464,
+  "test_items": 2282,
+  "save_dir": "/home/huy/207177/output/checkpoint/exp_learner_finetune_from_3ckpt/label1",
+  "training_curves": "/home/huy/207177/output/checkpoint/exp_learner_finetune_from_3ckpt/label1/training_curves.json"
+}

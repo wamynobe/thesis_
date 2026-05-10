@@ -1,0 +1,202 @@
+{
+  "checkpoint": "label2",
+  "checkpoint_path": "/home/huy/207177/output/checkpoint/exp_label2_ce/best.pt",
+  "pretrained": "facebook/wav2vec2-large-960h",
+  "pre_test_acc": 0.5414937759336099,
+  "post_test_acc": 0.7760736196319018,
+  "delta": 0.23457984369829188,
+  "best_dev_acc": 0.7607758620689655,
+  "pre_eval_info": {
+    "compared": 1928,
+    "skipped_no_csv": 0,
+    "skipped_no_pred": 354
+  },
+  "post_eval_info": {
+    "compared": 2282,
+    "skipped_no_csv": 0,
+    "skipped_no_pred": 0
+  },
+  "pre_classification_report": {
+    "T5/neutral": {
+      "precision": 0.25,
+      "recall": 0.019704433497536946,
+      "f1-score": 0.0365296803652968,
+      "support": 203.0
+    },
+    "T1": {
+      "precision": 0.5441412520064205,
+      "recall": 0.6220183486238532,
+      "f1-score": 0.5804794520547946,
+      "support": 545.0
+    },
+    "T2": {
+      "precision": 0.5307346326836582,
+      "recall": 0.5709677419354838,
+      "f1-score": 0.5501165501165501,
+      "support": 620.0
+    },
+    "T3": {
+      "precision": 0.11504424778761062,
+      "recall": 0.12149532710280374,
+      "f1-score": 0.11818181818181818,
+      "support": 107.0
+    },
+    "T4": {
+      "precision": 0.656188605108055,
+      "recall": 0.7373068432671082,
+      "f1-score": 0.6943866943866944,
+      "support": 453.0
+    },
+    "accuracy": 0.5414937759336099,
+    "macro avg": {
+      "precision": 0.4192217475171488,
+      "recall": 0.4142985388853571,
+      "f1-score": 0.39593883902103083,
+      "support": 1928.0
+    },
+    "weighted avg": {
+      "precision": 0.5113722132959494,
+      "recall": 0.5414937759336099,
+      "f1-score": 0.5145496445326277,
+      "support": 1928.0
+    }
+  },
+  "post_classification_report": {
+    "T5/neutral": {
+      "precision": 0.59375,
+      "recall": 0.5362903225806451,
+      "f1-score": 0.5635593220338984,
+      "support": 248.0
+    },
+    "T1": {
+      "precision": 0.7909356725146199,
+      "recall": 0.8074626865671641,
+      "f1-score": 0.7991137370753324,
+      "support": 670.0
+    },
+    "T2": {
+      "precision": 0.8177966101694916,
+      "recall": 0.7909836065573771,
+      "f1-score": 0.8041666666666667,
+      "support": 732.0
+    },
+    "T3": {
+      "precision": 0.5539568345323741,
+      "recall": 0.616,
+      "f1-score": 0.5833333333333334,
+      "support": 125.0
+    },
+    "T4": {
+      "precision": 0.8368121442125237,
+      "recall": 0.8698224852071006,
+      "f1-score": 0.8529980657640233,
+      "support": 507.0
+    },
+    "accuracy": 0.7760736196319018,
+    "macro avg": {
+      "precision": 0.7186502522858019,
+      "recall": 0.7241118201824573,
+      "f1-score": 0.7206342249746509,
+      "support": 2282.0
+    },
+    "weighted avg": {
+      "precision": 0.7753340844264501,
+      "recall": 0.7760736196319018,
+      "f1-score": 0.7752872926003095,
+      "support": 2282.0
+    }
+  },
+  "pre_confusion_matrix": [
+    [
+      4,
+      35,
+      91,
+      21,
+      52
+    ],
+    [
+      2,
+      339,
+      137,
+      9,
+      58
+    ],
+    [
+      5,
+      186,
+      354,
+      28,
+      47
+    ],
+    [
+      0,
+      15,
+      61,
+      13,
+      18
+    ],
+    [
+      5,
+      48,
+      24,
+      42,
+      334
+    ]
+  ],
+  "post_confusion_matrix": [
+    [
+      133,
+      21,
+      45,
+      24,
+      25
+    ],
+    [
+      26,
+      541,
+      61,
+      7,
+      35
+    ],
+    [
+      38,
+      81,
+      579,
+      19,
+      15
+    ],
+    [
+      10,
+      11,
+      16,
+      77,
+      11
+    ],
+    [
+      17,
+      30,
+      7,
+      12,
+      441
+    ]
+  ],
+  "tone_labels": [
+    "0",
+    "1",
+    "2",
+    "3",
+    "4"
+  ],
+  "tone_target_names": [
+    "T5/neutral",
+    "T1",
+    "T2",
+    "T3",
+    "T4"
+  ],
+  "train_items": 8577,
+  "dev_items": 464,
+  "test_items": 2282,
+  "save_dir": "/home/huy/207177/output/checkpoint/exp_learner_finetune_from_3ckpt/label2",
+  "training_curves": "/home/huy/207177/output/checkpoint/exp_learner_finetune_from_3ckpt/label2/training_curves.json"
+}
