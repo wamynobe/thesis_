@@ -17,6 +17,7 @@
         "**/*.lot": true
     },
     "latex-workshop.latex.recipe.default": "latexmk (lualatex)",
+    "latex-workshop.formatting.latex": "latexindent",
     "latex-workshop.latex.tools": [
         {
             "name": "lualatex",
