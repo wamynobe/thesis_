@@ -174,7 +174,10 @@ uses tone value~0 when the learner production does not realise any well-formed
 Mandarin tone and values~1--4 for perceived productions of the four full tones.
 These labels are mapped to \(T_{\mathrm{NS}}\) and \(T_1\)--\(T_4\),
 respectively. The value~0 is therefore a dataset-specific expert flag for a
-non-standard production, not the linguistic neutral tone.
+non-standard production, not the linguistic neutral tone. Stage~II prompts may
+contain more than one syllable, but records with multi-tone expert annotations
+are excluded before the experiments; every retained item therefore has one
+expert tone target.
 
 For the SSL experiments, each recording had to satisfy two requirements: an
 expert tone rating had to be available in the assessment spreadsheet, and the

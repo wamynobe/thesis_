@@ -59,31 +59,33 @@ because it exposes whether a model performs poorly on sparse categories such as
 
 Model selection always used development data, and the final test set was
 evaluated only after checkpoint selection was complete. The CNN baseline uses
-a random image split with $N=1{,}194$ test images, selecting its checkpoint by
-validation accuracy. The five SSL setups share a speaker-disjoint learner
-split with $N=2{,}282$ test utterances and 464 development utterances; their
-selection metric is learner-development accuracy for Setups~2, 3a--3c (learner
-stage), 4, and 5, and learner-development macro-F1 for Setup~6. For the
-intermediate stage in Setups~3a--3c the Stage~A checkpoint is picked on the
-AISHELL-1 development set (693 utterances, frame accuracy) before the learner
-stage takes over.
+an independent speaker-disjoint split with $N=2{,}407$ test items and 487
+validation items, selecting its checkpoint by validation accuracy. The five
+SSL setups share their own speaker-disjoint learner split with $N=2{,}282$
+test utterances and 464 development utterances; their selection metric is
+learner-development accuracy for Setups~2, 3a--3c (learner stage), 4, and 5,
+and learner-development macro-F1 for Setup~6. For the intermediate stage in
+Setups~3a--3c the Stage~A checkpoint is picked on the AISHELL-1 development
+set (693 utterances, frame accuracy) before the learner stage takes over.
 
 \section{Overall Model Comparison}
 \label{sec:exp:aggregate}
 
 Table~\ref{tab:exp:aggregate} reports the aggregate test results. The main
 comparison is among the five self-supervised systems because they use the same
-speaker-disjoint learner test split. The CNN baseline is included to show the
-performance of a conventional mel-spectrogram classifier under its original
-random image split.
+speaker-disjoint learner test split. The CNN baseline is included as a
+ToneNet-style reference; it uses its own speaker-disjoint split with a
+slightly different speaker partition and is therefore not a fully matched
+head-to-head comparison.
 
 \begin{table}[H]
 \centering
-\caption{Aggregate test performance for the six experimental setups. SSL rows
+\caption[Aggregate test performance for the six experimental setups.]
+{Aggregate test performance for the six experimental setups. SSL rows
 share the speaker-disjoint learner test set ($N=2\,282$); the CNN row uses an
-independent random image split ($N=1\,194$) and is reported as a ToneNet-style
-reference. Higher values are better; best values per metric are in
-\textbf{bold}.}
+independent speaker-disjoint split ($N=2\,407$) and is reported as a
+ToneNet-style reference. Higher values are better; best values per metric are
+in \textbf{bold}.}
 \label{tab:exp:aggregate}
 \scriptsize
 \setlength{\tabcolsep}{4pt}
@@ -96,7 +98,7 @@ reference. Higher values are better; best values per metric are in
 \toprule
 \textbf{Setup} & \textbf{System} & \textbf{Pre-training source} & \textbf{Acc. (\%)} & \textbf{Macro-F1 (\%)} & \textbf{Weighted F1 (\%)} \\
 \midrule
-1  & ToneNet-style CNN                                & n/a                          & 72.53 & 60.00 & 71.00 \\
+1  & ToneNet-style CNN                                & n/a                          & 69.42 & 57.32 & 68.24 \\
 2  & Wav2Vec~2.0, learner fine-tuning                 & LibriSpeech                  & 77.56 & 70.64 & 77.39 \\
 3a & Wav2Vec~2.0 + AISHELL-1 (label1)                 & LibriSpeech $+$ AISHELL-1    & 77.13 & 71.46 & 77.18 \\
 3b & Wav2Vec~2.0 + AISHELL-1 (label2)                 & LibriSpeech $+$ AISHELL-1    & 76.69 & 71.41 & 76.65 \\
@@ -164,14 +166,12 @@ roughly ten epochs while validation accuracy plateaus near 68\,\% and
 validation loss starts to creep up. This is the textbook overfit signature for
 a from-scratch image classifier on a small split, and explains why the CNN
 checkpoint is selected on validation accuracy rather than left at the final
-epoch. The confusion matrix on the same run
-(Figure~\ref{fig:exp:cnn_cm}) shows that the residual error is concentrated on
-\(T_3\) and \(T_{\mathrm{NS}}\): \(T_3\) is heavily confused with \(T_2\), and
-\(T_{\mathrm{NS}}\) productions are scattered across all four canonical tones.
-This per-class pattern is the same one quantified for the CNN row of
-Tables~\ref{tab:exp:aggregate} and~\ref{tab:exp:class_level}, although the
-absolute counts there come from an earlier CNN run on the smaller
-$N=1{,}194$ image split rather than the run plotted here.
+epoch. The confusion matrix (Figure~\ref{fig:exp:cnn_cm}) shows that the
+residual error is concentrated on \(T_3\) and \(T_{\mathrm{NS}}\): \(T_3\) is
+heavily confused with \(T_2\), and \(T_{\mathrm{NS}}\) productions are
+scattered across all four canonical tones, consistent with the weak \(T_3\)
+and \(T_{\mathrm{NS}}\) CNN scores in Tables~\ref{tab:exp:aggregate}
+and~\ref{tab:exp:class_level}.
 
 \begin{figure}[H]
 \centering
@@ -277,13 +277,13 @@ tone~\cite{hao2012}.
 
 \begin{table}[H]
 \centering
-\caption{Per-class precision (P), recall (R), and \(F_1\) on the
-speaker-disjoint learner test split (CNN uses the random image split). Values
-are in percentage points; the strongest value for each class--metric pair
-(excluding the CNN reference) is in \textbf{bold}. CNN precision is recovered
-from the reported R and \(F_1\) because the original CNN run is not retained in
-machine-readable form. Confusion matrices for every setup are reproduced in
-Appendix~\ref{sec:app:confusion_matrices}.}
+\caption[Per-class precision, recall, and \(F_1\) on the learner test split.]
+{Per-class precision (P), recall (R), and \(F_1\) on the learner test split.
+SSL systems share the speaker-disjoint learner test split ($N=2\,282$); the
+CNN baseline uses its own speaker-disjoint split ($N=2\,407$). Values are in
+percentage points; the strongest value for each class--metric pair (excluding
+the CNN reference) is in \textbf{bold}. Confusion matrices for every setup
+are reproduced in Appendix~\ref{sec:app:confusion_matrices}.}
 \label{tab:exp:class_level}
 \tiny
 \setlength{\tabcolsep}{2pt}
@@ -296,7 +296,7 @@ ccccccccccccccc@{}}
 \cmidrule(lr){3-5}\cmidrule(lr){6-8}\cmidrule(lr){9-11}\cmidrule(lr){12-14}\cmidrule(lr){15-17}
 \textbf{S} & \textbf{System} & \textbf{P} & \textbf{R} & \(F_1\) & \textbf{P} & \textbf{R} & \(F_1\) & \textbf{P} & \textbf{R} & \(F_1\) & \textbf{P} & \textbf{R} & \(F_1\) & \textbf{P} & \textbf{R} & \(F_1\) \\
 \midrule
-1  & CNN baseline                       & 60.79 & 37.00 & 46.00 & 76.03 & 78.00 & 77.00 & 72.57 & 82.00 & 77.00 & 51.33 & 14.00 & 22.00 & 71.36 & 86.00 & 78.00 \\
+1  & CNN baseline                       & 43.84 & 33.84 & 38.21 & 71.16 & 80.06 & 75.33 & 71.48 & 73.33 & 72.39 & 32.81 & 16.41 & 21.88 & 77.72 & 79.92 & 78.80 \\
 2  & Wav2Vec~2.0, learner only          & 55.92 & 47.58 & 51.42 & 80.36 & 80.60 & 80.48 & 81.91 & 79.78 & 80.83 & 50.00 & 57.60 & 53.53 & 84.13 & 89.94 & 86.94 \\
 3a & Wav2Vec~2.0 + AISHELL-1 label1     & 59.91 & 53.63 & 56.60 & 79.50 & 80.45 & 79.97 & 81.63 & 76.50 & 78.98 & 48.50 & 64.80 & 55.48 & 84.50 & 88.17 & 86.29 \\
 3b & Wav2Vec~2.0 + AISHELL-1 label2     & 61.97 & 53.23 & 57.27 & 77.30 & 80.30 & 78.77 & 81.97 & 75.14 & 78.40 & 50.31 & \textbf{65.60} & \textbf{56.94} & 83.12 & 88.36 & 85.66 \\
@@ -314,9 +314,11 @@ correctly identifies only 62 of the 248 \(T_{\mathrm{NS}}\) test utterances,
 giving 25.00\,\% recall. The confusion matrix
 (Table~\ref{tab:exp:cm_w2v_chinese}) shows that 91 of those 248 utterances are
 assigned to \(T_2\). The same backbone produces the strongest \(T_2\) recall
-of any setup (84.97\,\%), confirming that the representation is rich for
-canonical Mandarin tones; the deficit is in modelling the absence of canonical
-tone. This pattern is consistent with a Mandarin-pretrained backbone whose
+of any setup (84.97\,\%), suggesting that the model still separates some
+canonical categories well. However, the same pattern also shows a tendency to
+absorb non-standard learner productions into the nearest canonical class, so the
+deficit lies in modelling the absence of canonical tone. This pattern is
+consistent with a Mandarin-pretrained backbone whose
 internal templates for the four canonical tones are sharp enough to absorb
 acoustically ambiguous learner productions into the nearest canonical class,
 rather than preserving the expert's non-standard judgement.
@@ -370,23 +372,25 @@ four questions are directly tested by the experiments, while the last two are
 answered by interpreting the reported results in the broader CAPT setting.
 
 \paragraph{RQ1: CNN versus self-supervised speech models.}
-The self-supervised systems provide stronger class-balanced agreement with the
-expert tone labels than the ToneNet-style CNN reference. The CNN reaches
-60.00\,\% macro-F1 on its random image split, while every SSL setup reaches
-at least 67.33\,\% macro-F1 on the stricter speaker-disjoint learner
-protocol, and the best SSL system (Setup~5) reaches 73.37\,\%. The class-level
-breakdown in Table~\ref{tab:exp:class_level} shows that the gap is
-concentrated on the two minority categories: for \(T_1\) and \(T_2\) the CNN
-reaches \(F_1\) values within a few percentage points of the SSL systems
-(CNN 77\,\% vs SSL 78.29--83.39\,\%), and for \(T_4\) the CNN trails the SSL
-systems by roughly 8 percentage points (CNN 78\,\% vs SSL 85.66--88.07\,\%),
-but the largest gaps appear on \(T_3\) (CNN 22\,\% vs SSL 50.38--56.94\,\%)
-and \(T_{\mathrm{NS}}\) (CNN 46\,\% vs SSL 51.42--57.53\,\%, with Setup~4 the
-exception at 37.13\,\%). The class-balanced advantage of SSL therefore
-concentrates on \(T_3\) and \(T_{\mathrm{NS}}\) but is also visible on \(T_4\).
-Because the CNN and SSL systems do not share the same split protocol, this
-result is evidence that SSL representations are more promising for this task,
-not a fully controlled head-to-head comparison.
+The self-supervised systems provide stronger class-balanced agreement with
+the expert tone labels than the ToneNet-style CNN reference. The CNN reaches
+57.32\,\% macro-F1 on its speaker-disjoint test split, while every SSL setup
+reaches at least 67.33\,\% macro-F1 on the SSL speaker-disjoint split, and
+the best SSL system (Setup~5) reaches 73.37\,\%. The class-level breakdown in
+Table~\ref{tab:exp:class_level} shows that the gap is concentrated on the
+minority categories: for \(T_1\) and \(T_2\) the CNN reaches \(F_1\) values
+within a few percentage points of the SSL systems
+(CNN 75.33 / 72.39\,\% vs SSL 78.29--83.39\,\%), and for \(T_4\) the CNN
+trails the SSL systems by roughly 7 percentage points (CNN 78.80\,\% vs
+SSL 85.66--88.07\,\%); the largest gaps appear on \(T_3\)
+(CNN 21.88\,\% vs SSL 50.38--56.94\,\%) and \(T_{\mathrm{NS}}\)
+(CNN 38.21\,\% vs SSL 51.42--57.53\,\%, with Setup~4 the exception at
+37.13\,\%). The class-balanced advantage of SSL therefore concentrates on
+\(T_3\) and \(T_{\mathrm{NS}}\) but is also visible on \(T_4\). The CNN and
+SSL systems use independent speaker-disjoint splits with different test
+populations, so the result is evidence that SSL representations are more
+promising for this task rather than a fully controlled head-to-head
+comparison.
 
 \paragraph{RQ2: AISHELL-1 intermediate adaptation.}
 Intermediate adaptation on native Mandarin speech modestly lifts aggregate
@@ -425,16 +429,7 @@ for productions that do not realise any canonical tone. Future systems should
 therefore target these categories directly, for example through class-aware
 losses, confidence calibration, or more precise tone-bearing interval labels.
 
-\paragraph{RQ5: Expert labels versus intended-tone evaluation.}
-Evaluating against expert perceptual labels changes the interpretation of the
-scores. A model is not rewarded for predicting the prompt tone if the learner's
-realised production was judged differently by the expert. This is especially
-important for \(T_{\mathrm{NS}}\), where the correct output is a non-standard
-assessment category rather than one of the four canonical tones. The reported
-accuracy and F1 values should therefore be read as agreement with expert
-judgement in a CAPT context, not as ordinary native-speaker tone recognition.
-
-\paragraph{RQ6: Integration with a phonetic-accuracy classifier.}
+\paragraph{RQ5: Integration with a phonetic-accuracy classifier.}
 The tonal classifier can be combined with an independently trained
 phonetic-accuracy classifier only if both modules expose reliable confidence
 information and use compatible utterance or token references. The present
@@ -447,11 +442,12 @@ policy for disagreement between the tone and segmental classifiers.
 \section{Limitations}
 \label{sec:exp:limitations}
 
-The main limitation is that the CNN baseline and the SSL systems do not share
-the same split protocol. The CNN row is therefore used only as a reference point
-for a conventional ToneNet-style mel-spectrogram classifier. A fully controlled
-CNN-versus-SSL comparison would require the image model to be trained and tested
-on the same speaker-disjoint partition used for the SSL systems.
+The CNN baseline and the SSL systems use independent speaker-disjoint splits
+with different test populations ($N=2{,}407$ vs $N=2{,}282$), so the CNN row
+is treated as a reference point rather than a fully matched head-to-head
+result. A directly comparable evaluation would require the image model to be
+trained and tested on exactly the same speaker partition used for the SSL
+systems.
 
 The learner frame-level objective is also approximate. A single expert
 utterance-level tone label is copied to all MFA-selected speech frames. This

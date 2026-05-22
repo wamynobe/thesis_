@@ -83,10 +83,11 @@ frame labels are more detailed, but they are still transferred from read native
 speech to non-native learner productions.
 
 The third limitation is evaluation comparability for the CNN. The CNN baseline
-uses a random image split, following the ToneNet-style workflow implemented in
-the notebooks. The SSL experiments use speaker-disjoint splits. The CNN result
-is useful as a baseline reference, but a future fully controlled comparison
-should train the image model under the same speaker-disjoint split.
+and the SSL experiments both use speaker-disjoint splits, but their specific
+speaker partitions and test-set sizes differ ($N=2{,}407$ for the CNN,
+$N=2{,}282$ for the SSL systems). The CNN result is useful as a baseline
+reference, but a future fully controlled comparison should train the image
+model under the exact same speaker partition used for the SSL systems.
 
 The fourth limitation is that the thesis evaluates automatic label agreement,
 not pedagogical effectiveness. A model that predicts expert tone labels can be a

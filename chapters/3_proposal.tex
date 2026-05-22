@@ -74,10 +74,6 @@ The following research questions guide the solution:
   of learner tones compared with an English-pretrained Wav2Vec~2.0 checkpoint?
   \item Which expert categories remain most difficult after fine-tuning, and what do
   these errors imply for future CAPT use?
-  \item How does evaluating against expert perceptual labels differ from the
-  intended-tone evaluation that dominates the published Mandarin tone literature,
-  and what does this entail for interpreting the reported scores in a CAPT
-  context?
   \item Under what conditions can the tonal-accuracy classifier developed in
   this thesis be combined with an independently trained phonetic-accuracy
   classifier~\cite{brzeski2025mprp} to form a two-dimensional CAPT feedback
@@ -123,7 +119,10 @@ tests whether pooling over the speech frames can improve robustness to class
 imbalance and to uncertain frame-level supervision.
 
 Across all self-supervised systems, the intended output is a single expert-tone
-label per utterance. The system is therefore designed as an assessment model,
+label per retained utterance. Records with multi-tone expert annotations are
+excluded before training and evaluation, so the one-label formulation applies
+only to items that have a single target tone category. The system is therefore
+designed as an assessment model,
 not as a full pronunciation tutor. It does not generate corrective phonetic
 instructions, visual pitch traces, or learner-facing feedback messages. Those
 functions depend on the reliability of the classifier and are therefore treated
@@ -141,8 +140,9 @@ reproducibility requirements.
 The learner dataset must contain audio recordings from Polish learners of
 Mandarin and expert tone annotations for the same utterances. The annotation set
 must cover the four full lexical tones and the non-standard learner-production
-category \(T_{\mathrm{NS}}\). The linguistic neutral tone is not a target category
-in the learner vocabulary used here. Because the goal is to estimate performance
+category \(T_{\mathrm{NS}}\). The linguistic neutral tone is not represented by
+the expert label value~0 and is not modelled as a separate output class in this
+work. Because the goal is to estimate performance
 on unseen learners, the main self-supervised evaluation must use
 speaker-disjoint training, development, and test partitions. No speaker may
 appear in more than one partition. Audio items that lack an expert label or

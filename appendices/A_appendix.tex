@@ -37,7 +37,7 @@ Stage~I after MFA + single-tone filter   & 6\,623 \\
 Stage~II after MFA + single-tone filter  & 4\,700 \\
 Speakers retained in SSL manifests        & 678 \\
 SSL split (speaker-disjoint)              & 8\,577 / 464 / 2\,282 \\
-CNN image split (random)                  & 9\,546 / 1\,194 / 1\,194 \\
+CNN image split (speaker-disjoint)        & 9\,040 / 487 / 2\,407 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -54,7 +54,8 @@ Table~\ref{tab:app:learner_corpus_summary}.
 
 \begin{table}[H]
 \centering
-\caption{Tone-label counts after the non-MFA filters and before the
+\caption[Tone-label counts before the MFA-mask filter.]
+{Tone-label counts after the non-MFA filters and before the
 MFA-mask filter (criteria~i, ii, iv applied; criterion~iii pending).}
 \label{tab:app:csv_tone_counts}
 \small
@@ -74,10 +75,12 @@ Stage~II & 882 & 1\,098 & 1\,469 & 462 & 789 \\
 Stage~I uses 12 single-syllable Mandarin number words; Stage~II uses 18
 everyday-vocabulary items. Pinyin is reported without tone marks because the
 target label is the tone perceived by the expert, not the canonical lexical
-tone. Disyllabic items such as \texttt{xihuan} and \texttt{bu xihuan} are
-sometimes listed with a neutral second syllable in modern dictionaries; the
-expert annotation for this corpus treats them as full tones, so omitting tone
-marks is also conservative against that lexical convention.
+tone. Some Stage~II prompts contain more than one syllable, and items such as
+\texttt{xihuan} and \texttt{bu xihuan} are sometimes listed with a neutral
+second syllable in modern dictionaries. Those lexical neutral-tone conventions do
+not define a separate output class here: records with multi-tone expert
+annotations are excluded, and expert label value~0 denotes
+\(T_{\mathrm{NS}}\), not the linguistic neutral tone.
 
 \begin{table}[H]
 \centering
@@ -466,15 +469,10 @@ the main experiments:
 
 Tables~\ref{tab:app:cm_w2v_learner}--\ref{tab:app:cm_hubert_attn} reproduce
 the speaker-disjoint learner test-set confusion matrices for the six SSL
-setups (Setup~4 is already in Table~\ref{tab:exp:cm_w2v_chinese}). Rows are
-expert labels, columns are model predictions; the diagonal counts are the
-recall numerators in Table~\ref{tab:exp:class_level}. The CNN baseline
-confusion matrix from a separate re-run is shown as
-Figure~\ref{fig:exp:cnn_cm}; the per-class pattern is the same as the CNN row
-of Table~\ref{tab:exp:class_level}, only the absolute counts differ because
-the random-image $N=1{,}194$ run reported in
-Tables~\ref{tab:exp:aggregate}--\ref{tab:exp:class_level} is not retained in
-machine-readable form.
+setups. Setup~4 is already in Table~\ref{tab:exp:cm_w2v_chinese}, and the CNN
+baseline is in Figure~\ref{fig:exp:cnn_cm}. Rows are expert labels, columns
+are model predictions; the diagonal counts are the recall numerators in
+Table~\ref{tab:exp:class_level}.
 
 \begin{table}[H]
 \centering
