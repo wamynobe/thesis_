@@ -6,9 +6,11 @@
 
 This chapter describes the implementation used for Mandarin tone classification
 on Polish learner speech. The system receives one learner utterance and assigns
-it to one of five tone classes,
-\(\mathcal{T}=\{T_1,T_2,T_3,T_4,T_5\}\), where \(T_5\) denotes the neutral
-tone. Expert tone annotation is used as the training and evaluation target, so
+it to one of five expert categories,
+\(\mathcal{T}=\{T_1,T_2,T_3,T_4,T_{\mathrm{NS}}\}\), where
+\(T_1\)--\(T_4\) are the four full Mandarin lexical tones and
+\(T_{\mathrm{NS}}\) denotes a non-standard learner production outside those four
+tones. Expert tone annotation is used as the training and evaluation target, so
 the reported scores measure agreement with perceived learner production rather
 than with the intended prompt tone.
 
@@ -16,7 +18,9 @@ The experiments compare six complete setups. Setup~1 is a ToneNet-style CNN
 baseline. Setups~2--4 are Wav2Vec~2.0 systems with different adaptation routes.
 Setups~5--6 use Chinese HuBERT-Large with two prediction heads. All SSL systems
 share the same learner manifest format and the same speaker-disjoint
-train/development/test split.
+train/development/test split. The CNN baseline follows a separate random image
+split, matching the ToneNet-style image-classification protocol rather than the
+SSL evaluation protocol.
 
 \section{Model Architectures}
 \label{sec:design:models}
@@ -25,7 +29,7 @@ train/development/test split.
 \label{sec:design:models:cnn}
 
 The CNN baseline treats tone classification as image classification over
-low-frequency mel-spectrograms, following the ToneNet formulation
+low-frequency mel-spectrograms, adapted from the ToneNet formulation
 \cite{gao2019tonenet}. Each recording is loaded as mono 16\,kHz audio, trimmed
 for leading and trailing silence, and converted into a log-mel spectrogram with
 64 mel bands restricted to 50--350\,Hz. The spectrogram is rendered as a
@@ -53,7 +57,8 @@ The Wav2Vec~2.0 experiments use three fine-tuning routes, shown in
 Figure~\ref{fig:design:wav2vec_routes}. Setup~2 starts from the English
 \mbox{wav2vec2-large-960h} checkpoint and fine-tunes directly on the
 learner corpus \cite{baevski2020}. Setup~3 first trains the same checkpoint on
-AISHELL-1 frame-level Mandarin tone labels and then fine-tunes the resulting
+AISHELL-1 frame-level Mandarin tone labels for \(T_1\)--\(T_4\), excluding
+neutral-tone and silence frames from the loss, and then fine-tunes the resulting
 checkpoints on learner speech \cite{bu2017aishell}. Setup~4 starts from
 \mbox{chinese-wav2vec2-large}, a Mandarin-specific checkpoint
 pre-trained on WenetSpeech, and fine-tunes directly on learner speech
@@ -61,8 +66,8 @@ pre-trained on WenetSpeech, and fine-tunes directly on learner speech
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{img/architecture/wave2vec_setups.png}
-\caption{Wav2Vec~2.0 fine-tuning setups.}
+\includegraphics[width=\textwidth]{img/architecture/fig4_2.png}
+\caption{Wav2Vec~2.0 fine-tuning routes.}
 \label{fig:design:wav2vec_routes}
 \end{figure}
 
@@ -80,8 +85,8 @@ The weighted frame representation \(h_t\) is passed to a linear classifier.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{img/architecture/wave2vec_common_arc.png}
-\caption{Common Wav2Vec~2.0 frame-level architecture.}
+\includegraphics[width=\textwidth]{img/architecture/fig4_3.png}
+\caption{Common SSL frame-level backbone.}
 \label{fig:design:wav2vec_common}
 \end{figure}
 
@@ -105,13 +110,13 @@ frame votes for a tone category:
   \sum_{t \in M} \mathbf{1}\!\left[\argmax_{k} p(k \mid h_t) = c\right].
   \label{eq:design:majority_vote}
 \end{equation}
-If the resampled mask contains fewer than five speech frames, all encoder frames
-are used.
+For both training and inference, if the resampled mask contains fewer than five
+speech frames, all encoder frames are used.
 
 For Setup~3, AISHELL-1 intermediate training uses MFA-derived frame-label
 streams rather than copied learner labels. The best checkpoint for each stream
-is selected by AISHELL-1 development frame accuracy and then used to initialise
-learner fine-tuning.
+is selected by AISHELL-1 development frame accuracy computed over \(T_1\)--\(T_4\)
+frames and then used to initialise learner fine-tuning.
 
 \subsection{HuBERT fine-tuning}
 \label{sec:design:models:hubert}
@@ -133,8 +138,8 @@ where \(m_t\in\{0,1\}\) is the resampled speech mask. The utterance vector is
   z = \sum_t a_t h_t,
   \label{eq:design:utt_repr}
 \end{equation}
-and a linear classifier maps \(z\) to the five tone classes. Focal loss
-\cite{lin2017focal} is used with \(\gamma=2\):
+and a linear classifier maps \(z\) to the five expert categories. The attention
+variant uses focal loss with \(\gamma=2\)~\cite{lin2017focal}:
 \begin{equation}
   \mathrm{FL}(p_y) = -\,{(1-p_y)}^{\gamma}\log p_y.
   \label{eq:design:focal}
@@ -142,9 +147,17 @@ and a linear classifier maps \(z\) to the five tone classes. Focal loss
 
 Both HuBERT variants keep the convolutional feature extractor frozen. Training
 starts with the Transformer blocks frozen; only the layer weights and the tone
-head are updated, at learning rate 0.0001. After 5{,}000 optimisation steps,
-the Transformer blocks are unfrozen and fine-tuned at learning rate 0.00001,
-while the convolutional feature extractor remains frozen.
+head are updated with learning rate \(1\times10^{-4}\). After 2{,}000
+optimisation steps, the Transformer blocks are unfrozen and fine-tuned with
+learning rate \(1\times10^{-5}\), while the convolutional feature extractor
+remains frozen.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{img/architecture/fig4_4.png}
+\caption{HuBERT prediction heads.}
+\label{fig:design:hubert_heads}
+\end{figure}
 
 \section{Data Preparation}
 \label{sec:design:pipeline}
@@ -152,17 +165,21 @@ while the convolutional feature extractor remains frozen.
 \subsection{Learner corpus}
 \label{sec:design:pipeline:learner_database}
 
-To make the evaluation reflect generalisation to unseen Polish learners, we
-prepared the learner corpus with speaker separation as the main constraint. The
+To make the evaluation reflect generalisation to unseen Polish learners, the
+learner corpus was prepared with speaker separation as the main constraint. The
 original assessment file contains 679 learner profiles collected in two recording
 stages. Stage~I consists of isolated number-word productions, while Stage~II
 contains everyday vocabulary and short phrase recordings. The expert annotation
-uses tone value~0 for the neutral tone and values~1--4 for the four full tones;
-these labels are mapped to \(T_5\) and \(T_1\)--\(T_4\), respectively.
+uses tone value~0 when the learner production does not realise any well-formed
+Mandarin tone and values~1--4 for perceived productions of the four full tones.
+These labels are mapped to \(T_{\mathrm{NS}}\) and \(T_1\)--\(T_4\),
+respectively. The value~0 is therefore a dataset-specific expert flag for a
+non-standard production, not the linguistic neutral tone.
 
 For the SSL experiments, each recording had to satisfy two requirements: an
 expert tone rating had to be available in the assessment spreadsheet, and the
-audio had to be successfully aligned by Montreal Forced Aligner~(MFA). Applying
+audio had to be successfully aligned by Montreal Forced Aligner~(MFA)
+\cite{mcauliffe2017mfa}. Applying
 these criteria produced the working learner corpus used by the frame-level
 systems: 6\,623 Stage~I utterances and 4\,700 Stage~II utterances, giving
 11\,323 utterances from 678 speakers. Each utterance is stored as a JSONL record
@@ -191,12 +208,17 @@ introduced when short waveforms are batched.
 \label{sec:design:pipeline:aishell}
 
 Setup~3 adds an intermediate stage on native Mandarin read speech from
-AISHELL-1. After MFA alignment, frames are labelled with one of the five tone
-classes \(T_1\)--\(T_5\) following the corpus phone notation (tones one through
-four correspond to \(T_1\)--\(T_4\), and tone zero to the neutral class \(T_5\)).
-Silence uses labels separate from \(T_1\)--\(T_5\). Three parallel label streams
-reuse the same waveforms and hyperparameters but change where tone supervision is
-placed in time (Table~\ref{tab:design:aishell_label_streams}).
+AISHELL-1. After MFA alignment, frames are labelled from the corpus phone
+notation, but only frames corresponding to the four full tones
+\(T_1\)--\(T_4\) are used as AISHELL supervision. Frames annotated as the
+linguistic neutral tone, silence, consonant-only regions, or any other non-tone
+class are mapped to the ignore index and excluded from the AISHELL loss. This
+prevents the fifth learner output category from being trained to mean neutral
+tone during native-speech adaptation. The three parallel label streams are
+adapted from the design proposed by Yuan et~al.~\cite{yuan2023}: they reuse
+the same waveforms and training hyperparameters but change where
+\(T_1\)--\(T_4\) supervision is placed in time
+(Table~\ref{tab:design:aishell_label_streams}).
 
 \begin{table}[H]
 \centering
@@ -209,29 +231,55 @@ placed in time (Table~\ref{tab:design:aishell_label_streams}).
 \midrule
 label1 & The tone label spans the toned rhyme and the preceding onset, so the whole syllable carries one tone class. \\
 \addlinespace
-label2 & Only the toned rhyme receives the tone label; the onset receives a separate consonant class. \\
+label2 & Only the toned rhyme receives the tone label; the onset is assigned a non-tone label and excluded from the tone loss. \\
 \addlinespace
 label3 & Tone labels are attached only at the temporal midpoint of tone-bearing phones; consonants and other regions stay outside the tone objective. \\
 \bottomrule
 \end{tabular}
 \end{table}
 
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{img/architecture/fig4_5.png}
+\caption{AISHELL-1 frame-label streams.}
+\label{fig:design:aishell_streams}
+\end{figure}
+
 After filtering and the train/dev partition used in the notebooks, the
 intermediate AISHELL-1 stage trains on 33\,986 utterances and monitors a held-out
-development set of 693 utterances.
+development set of 693 utterances. The AISHELL objective uses a masked
+cross-entropy over only the first four logits:
+\begin{equation}
+  \mathcal{L}_{\text{AISHELL}}
+  =
+  -\frac{1}{|M_A|}
+  \sum_{t \in M_A}
+  \log
+  \frac{\exp z_{t,y_t}}{\sum_{k=1}^{4}\exp z_{t,k}},
+  \qquad y_t \in \{T_1,T_2,T_3,T_4\},
+  \label{eq:design:aishell_masked_ce}
+\end{equation}
+where \(M_A\) excludes neutral-tone, silence, and non-tone frames. Because the
+fifth learner category \(T_{\mathrm{NS}}\) is not part of the AISHELL softmax, it
+receives no native-speech training signal. Before learner fine-tuning, the first
+four classifier rows are copied from the AISHELL checkpoint, while the fifth row
+for \(T_{\mathrm{NS}}\) is re-initialised from a Gaussian distribution with
+mean~0 and standard deviation~0.02.
 
 \subsection{CNN image features}
 \label{sec:design:pipeline:cnn_features}
 
 The CNN baseline bypasses raw waveforms and instead reads fixed-size images.
-Every eligible learner recording is rasterised to the same low-frequency
+Because this branch does not require MFA alignment, its eligible set is larger
+than the SSL working corpus. Every labelled learner recording is rasterised to
+the same low-frequency
 mel-spectrogram layout as in Section~\ref{sec:design:models:cnn}, exported as a
-PNG, and stacked into a cache of \(N\) tensors with spatial size 225 by 225 and
-three colour channels.
+PNG, and stacked into a cache of 11\,934 tensors with spatial size 225 by 225
+and three colour channels.
 Figure~\ref{fig:design:cnn_mel_examples} shows five illustrative crops after this
-rendering pipeline (Tone~0 denotes the neutral-tone class \(T_5\); Tone~1--Tone~4
-correspond to \(T_1\)--\(T_4\)); subtitles record learner utterance identifiers from
-the corpus.
+rendering pipeline (Tone~0 denotes the non-standard \(T_{\mathrm{NS}}\) category;
+Tone~1--Tone~4 correspond to \(T_1\)--\(T_4\)); subtitles record learner utterance
+identifiers from the corpus.
 
 \begin{figure}[H]
 \centering
@@ -253,19 +301,20 @@ exploratory audio and feature plots. The CNN baseline is implemented with
 TensorFlow/Keras, and the SSL models are implemented with PyTorch and Hugging
 Face Transformers.
 
-For SSL training on the learner corpus, each input is a mono 16\,kHz utterance
-and the batch size is one utterance. Optimisation uses AdamW, gradient clipping
-with maximum norm~1.0, and a linear learning-rate warm-up over the first
-1{,}000 updates. During the initial phase, the Transformer stack is frozen; only
-the learned layer weights and the tone-classification head are updated, using a
-learning rate of 0.0001. After 5{,}000 updates, the Transformer layers are
-unfrozen and fine-tuned with learning rate 0.00001, while the convolutional
-feature encoder remains frozen throughout. Each learner fine-tuning run lasts
-30{,}000 updates, with development evaluation every 1{,}000 updates. Checkpoint
-selection uses learner development accuracy for the frame-voting systems and
-learner development macro-F1 for the HuBERT attention model. The AISHELL-1
-intermediate stage follows the same update schedule, but its checkpoint
-selection is based on frame-level development accuracy on native speech.
+For SSL training, each input is a mono 16\,kHz utterance and the batch size is
+one utterance. Optimisation uses AdamW, gradient clipping at maximum norm~1.0,
+and 1{,}000 warm-up updates. During the frozen phase, only the learned layer
+weights and the tone-classification head are updated, using a learning rate of
+\(1\times10^{-4}\). For Setups~2, 3, 5, and~6, the Transformer layers are
+unfrozen after 2{,}000 updates and training continues to 40{,}000 updates;
+Setup~4 retains the 5{,}000-update unfreeze point and 30{,}000-update training
+budget selected for that backbone. After unfreezing, the Transformer is
+fine-tuned with learning rate \(1\times10^{-5}\), while the convolutional
+feature encoder remains frozen.
+Development evaluation is performed every 1{,}000 updates. Checkpoint selection
+uses learner development accuracy for the frame-voting systems, learner
+development macro-F1 for the HuBERT attention model, and native-speech
+frame-level development accuracy for the AISHELL-1 intermediate stage.
 
 MFA masks and AISHELL frame labels are stored on a 25\,ms grid, whereas
 Wav2Vec~2.0 and HuBERT produce hidden states on the encoder time axis. The masks
@@ -282,9 +331,18 @@ The time- and feature-masking augmentations provided by the Hugging Face
 implementations are disabled by setting the masking probabilities to zero. This
 avoids removing a large proportion of the signal in short learner utterances.
 
+The CNN hyperparameters follow the ToneNet-style image-classification recipe of
+Gao et~al.~\cite{gao2019tonenet} where applicable. The SSL configuration uses
+Wav2Vec~2.0 and HuBERT backbones~\cite{baevski2020,hsu2021}, AdamW
+optimisation~\cite{loshchilov2019decoupled}, and the frame-level tone objective,
+full fine-tuning learning rate, and AISHELL-1 label streams from Yuan
+et~al.~\cite{yuan2023}. Values not fixed by those sources are listed in
+Appendix~\ref{page:B_appendix}; the schedule-sensitive values are further
+checked in the Optuna study in Appendix~\ref{sec:app:sensitivity}.
+
 At the end of each experiment, the corresponding notebook saves a JSON summary
 containing the split sizes, the best development score, test-set aggregate
-metrics, per-tone metrics, and the confusion matrix.
+metrics, per-category metrics, and the confusion matrix.
 Chapter~\ref{chapter:5_Experiments} uses these summaries to construct the result
 tables.
 

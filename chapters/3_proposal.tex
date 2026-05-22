@@ -4,20 +4,328 @@
 
 \chapter{Proposal of a Solution}\label{chapter:3_Proposal}
 
+The literature review in Chapter~\ref{chapter:2_StateOfTheArt} identified a
+need for automatic Mandarin tone assessment that is evaluated on the speech of
+Polish learners and judged against expert perceptual labels rather than only
+against prompt transcriptions. This chapter translates that need into a concrete
+research problem and defines the requirements for the experimental solution. The
+proposed solution is not a complete end-user pronunciation-training application.
+It is the assessment component that such an application would require. At the
+system level, pronunciation assessment is decomposed into two independent
+classifiers, one for segmental phonetic accuracy and one for tonal accuracy. The
+implemented experiments focus on the tonal classifier, which receives a learner
+utterance and predicts the expert category perceived by a qualified Mandarin
+phonetics expert.
+
 \section{Problem Definition}
 \label{sec:proposal:problem}
+
+The central problem addressed in this thesis is the automatic classification of
+Mandarin lexical tones in speech produced by Polish learners. For a given audio
+recording \(x\), the system must predict one class from
+\(\mathcal{T}=\{T_1,T_2,T_3,T_4,T_{\mathrm{NS}}\}\), where
+\(T_1\)--\(T_4\) denote the four full lexical tones of Standard Mandarin and
+\(T_{\mathrm{NS}}\) denotes a non-standard learner production that the expert did
+not perceive as any well-formed Mandarin tone. The target label \(y\) is the
+expert annotation of the learner's realised tone, not merely the lexical tone
+expected from the written prompt. The learning task can therefore be expressed as
+\begin{equation}
+  \hat{y}=f_{\theta}(x), \qquad \hat{y},y \in \mathcal{T},
+  \label{eq:proposal:classification_problem}
+\end{equation}
+where \(f_{\theta}\) is a trainable model and \(\hat{y}\) is evaluated by its
+agreement with \(y\).
+
+This formulation differs from standard native-speaker tone recognition in three
+ways. First, learner speech contains productions that may fall between canonical
+tone categories, especially for learners whose first language does not use tone
+lexically. Studies of non-tonal-L1 learners show that tonal categories are
+difficult to acquire and that the T2/T3 contrast is particularly problematic
+\cite{hao2012}. Polish learners have also been shown to differ from native
+Mandarin speakers in pitch height and contour shape across tones
+\cite{chu2024statistical,zajdler2021}. Second, the relevant assessment target is
+perceptual. In a CAPT setting, the system must approximate how an instructor
+would judge the production, because feedback based only on the intended prompt
+tone would ignore actual learner errors. Third, the task must handle limited
+annotated learner data. This constraint favours methods that can use prior
+knowledge from large speech corpora, such as Wav2Vec~2.0 and HuBERT
+\cite{baevski2020,hsu2021}.
+
+The thesis evaluates this problem through a comparative experimental study. A
+ToneNet-style convolutional neural network is included as a conventional
+spectrogram-based reference because CNN tone classifiers have performed well on
+controlled Mandarin syllable data \cite{gao2019tonenet}. The main proposed
+direction, however, is to adapt self-supervised speech models to the learner
+tone task. Prior work indicates that self-supervised representations encode
+Mandarin suprasegmental information and that language-matched pre-training can
+improve tonal representation quality \cite{yuan2023,delafuente2024}. The study
+therefore compares whether such representations are more suitable for variable
+learner speech than a classifier trained from spectrogram images alone.
+
+The following research questions guide the solution:
+
+\begin{enumerate}[label=\textbf{RQ\arabic*.}, leftmargin=1.5cm]
+  \item Which of the evaluated model families, CNN or self-supervised speech
+  models, provides stronger agreement with expert tone labels on Polish learner
+  speech?
+  \item Does intermediate adaptation on native Mandarin speech improve
+  Wav2Vec~2.0 performance on learner tone classification?
+  \item Do Mandarin-specific pre-trained checkpoints improve the classification
+  of learner tones compared with an English-pretrained Wav2Vec~2.0 checkpoint?
+  \item Which expert categories remain most difficult after fine-tuning, and what do
+  these errors imply for future CAPT use?
+  \item How does evaluating against expert perceptual labels differ from the
+  intended-tone evaluation that dominates the published Mandarin tone literature,
+  and what does this entail for interpreting the reported scores in a CAPT
+  context?
+  \item Under what conditions can the tonal-accuracy classifier developed in
+  this thesis be combined with an independently trained phonetic-accuracy
+  classifier~\cite{brzeski2025mprp} to form a two-dimensional CAPT feedback
+  signal, and what additional information (e.g.\ confidence calibration,
+  prompt-tone reference) would such an integration require?
+\end{enumerate}
+
+\section{Proposed Solution Overview}
+\label{sec:proposal:overview}
+
+The proposed solution is a comparative tone-assessment pipeline composed of
+three elements: a labelled learner corpus, a set of model configurations, and an
+expert-aligned evaluation protocol. The learner corpus provides recordings from
+Polish speakers of Mandarin together with tone annotations assigned by a
+qualified expert. The model configurations represent two methodological
+families: a CNN baseline using low-frequency mel-spectrogram images and five
+self-supervised speech systems using Wav2Vec~2.0 or HuBERT representations. The
+evaluation protocol compares the models on held-out learner recordings using
+accuracy, macro-F1, weighted F1, class-level metrics, and confusion matrices.
+
+The CNN branch follows the tone-classification tradition in which an acoustic
+representation is treated as an image. Each utterance is converted into a
+low-frequency mel-spectrogram and passed to a convolutional classifier. This
+branch establishes whether a compact spectrogram model is sufficient for the
+available learner data and provides a reference point for the self-supervised
+systems.
+
+The Wav2Vec~2.0 branch tests three adaptation routes. The first route fine-tunes
+an English-pretrained Wav2Vec~2.0 Large model directly on learner recordings.
+The second route inserts an intermediate native Mandarin stage using AISHELL-1
+\cite{bu2017aishell}; three frame-label definitions are tested to examine where
+tone supervision should be placed in the syllable. The third route starts from a
+Mandarin-specific Wav2Vec~2.0 checkpoint released from WenetSpeech pre-training
+\cite{zhang2022wenetspeech,tencentgamemate2022}. These routes test whether the
+benefit comes from self-supervised modelling in general, from native Mandarin
+adaptation, or from Mandarin-matched pre-training.
+
+The HuBERT branch evaluates a second self-supervised backbone with two heads.
+One system uses frame-level cross-entropy and majority voting, matching the
+general structure of the Wav2Vec~2.0 learner systems. The second uses an
+utterance-level attention pooling head trained with focal loss. This comparison
+tests whether pooling over the speech frames can improve robustness to class
+imbalance and to uncertain frame-level supervision.
+
+Across all self-supervised systems, the intended output is a single expert-tone
+label per utterance. The system is therefore designed as an assessment model,
+not as a full pronunciation tutor. It does not generate corrective phonetic
+instructions, visual pitch traces, or learner-facing feedback messages. Those
+functions depend on the reliability of the classifier and are therefore treated
+as possible downstream applications rather than as part of the present thesis.
 
 \section{Requirements Specification}
 \label{sec:proposal:requirements}
 
+The requirements are divided into data, modelling, evaluation, and
+reproducibility requirements.
+
+\subsection{Data requirements}
+\label{sec:proposal:requirements:data}
+
+The learner dataset must contain audio recordings from Polish learners of
+Mandarin and expert tone annotations for the same utterances. The annotation set
+must cover the four full lexical tones and the non-standard learner-production
+category \(T_{\mathrm{NS}}\). The linguistic neutral tone is not a target category
+in the learner vocabulary used here. Because the goal is to estimate performance
+on unseen learners, the main self-supervised evaluation must use
+speaker-disjoint training, development, and test partitions. No speaker may
+appear in more than one partition. Audio items that lack an expert label or
+cannot be aligned reliably must be excluded from the self-supervised frame-level
+experiments, since these systems require a speech mask for training and
+aggregation.
+
+For the intermediate Wav2Vec~2.0 route, a native Mandarin corpus must be
+available for frame-level adaptation. AISHELL-1 satisfies this requirement
+because it is a large, open Mandarin read-speech corpus and has been widely used
+as an ASR benchmark \cite{bu2017aishell}. Its role in this thesis is not to
+replace learner data but to test whether native Mandarin tone supervision
+improves later transfer to Polish learner speech.
+
+\subsection{Model requirements}
+\label{sec:proposal:requirements:model}
+
+The model set must include at least one conventional non-SSL baseline and
+several self-supervised alternatives. The baseline must operate without large
+pre-trained speech representations, so that the comparison can distinguish the
+effect of SSL pre-training from the effect of the learner dataset alone. The SSL
+models must be fine-tuned under comparable learner-data conditions and must
+produce one of the five expert categories for each utterance.
+
+The proposed model set consists of six complete setups:
+
+\begin{enumerate}[leftmargin=1.2cm]
+  \item a ToneNet-style CNN trained on low-frequency mel-spectrogram images;
+  \item Wav2Vec~2.0 Large fine-tuned directly on learner speech;
+  \item Wav2Vec~2.0 Large adapted first on AISHELL-1 tone labels and then
+  fine-tuned on learner speech;
+  \item Chinese Wav2Vec~2.0 Large fine-tuned on learner speech;
+  \item Chinese HuBERT-Large fine-tuned with frame-level cross-entropy;
+  \item Chinese HuBERT-Large fine-tuned with attention pooling and focal loss.
+\end{enumerate}
+
+This set is intentionally limited. It is broad enough to compare the main
+modelling choices motivated by the literature, but small enough for all systems
+to be trained, evaluated, and analysed within one thesis.
+
+\subsection{Evaluation requirements}
+\label{sec:proposal:requirements:evaluation}
+
+Evaluation must measure agreement with expert labels. Accuracy alone is
+insufficient because the learner corpus is class-imbalanced; high accuracy may
+hide poor performance on less frequent or acoustically difficult classes.
+Therefore, macro-F1 and weighted F1 must be reported alongside accuracy. The
+evaluation must also include per-category precision, recall, F1, and confusion
+matrices, with special attention to \(T_3\) and \(T_{\mathrm{NS}}\). \(T_3\) is
+expected to be difficult because of its phonetic variability and known learner
+confusion with rising tones, while \(T_{\mathrm{NS}}\) is expected to be
+difficult because it groups acoustically heterogeneous productions that fall
+outside the four canonical tone categories.
+
+Model selection must be based only on development data. The held-out test set
+must be used for the final comparison after checkpoint selection is complete.
+For the SSL systems, the same speaker-disjoint learner split must be used so
+that the results are directly comparable. If a baseline uses a different split
+because of its original feature-generation pipeline, that split must be reported
+explicitly and the interpretation must avoid treating it as a perfectly matched
+comparison.
+
+\subsection{Reproducibility requirements}
+\label{sec:proposal:requirements:reproducibility}
+
+Each experiment must save the information needed to reconstruct the reported
+tables: split sizes, selected checkpoint score, test-set aggregate metrics,
+class-level metrics, and the confusion matrix. Training curves should be saved
+to allow inspection of convergence and checkpoint stability. These requirements ensure that the reported results are
+not based on manual transcription from console output.
 
 \section{Assumptions and Limitations}
 \label{sec:proposal:assumptions}
 
+The first assumption is that the expert annotation is an appropriate reference
+for the realised learner tone. This is consistent with the purpose of CAPT,
+where the practical goal is to approximate expert judgement. At the same time,
+the thesis does not estimate inter-rater reliability because only one expert
+annotation source is used. The reported scores should therefore be interpreted
+as agreement with this expert reference, not as agreement with a multi-rater
+consensus.
+
+The second assumption is that utterance-level tone labels can be used as a
+training signal for frame-level SSL models. In the implemented systems, the
+learner label is applied to frames selected by a speech mask. This is a practical
+approximation: it gives the model many supervised time steps from a short
+utterance, but it does not identify the exact tone-bearing interval with
+phonetic precision. The AISHELL-1 intermediate experiments partly address this
+issue by testing alternative frame-label definitions, but they do not remove the
+approximation for learner speech.
+
+The third assumption is that the available learner recordings are sufficiently
+representative of Polish learners in the studied educational context. The corpus
+contains a large number of speakers, which is valuable for a speaker-disjoint
+evaluation. However, it still reflects a specific recording protocol, set of
+prompts, proficiency range, and annotation procedure. Generalisation to other
+learner populations, spontaneous speech, or different recording environments
+requires additional validation.
+
+Several limitations follow from these assumptions. The quantitative experiments
+focus on tone-category classification and do not report a full segmental
+consonant--vowel model, fluency scoring, or sentence-level prosody evaluation.
+The segmental classifier is therefore treated as a parallel component of the
+overall CAPT design rather than as the main experimental object of this thesis.
+The study also does not implement pedagogical feedback, even though feedback is
+the eventual CAPT use case. Furthermore, the CNN baseline and the SSL systems
+use different feature pipelines and, in the final implementation, different
+split protocols. The CNN result is therefore best interpreted as a ToneNet-style
+reference rather than as a strictly controlled architectural ablation against the
+SSL models. Finally, the experiments do not train a new self-supervised model
+from scratch; they fine-tune existing checkpoints because the available labelled
+learner data are not sufficient for large-scale pre-training.
+
 \section{Acceptance Criteria}
 \label{sec:proposal:criteria}
 
+The proposed solution is considered successful if it satisfies the following
+criteria:
+
+\begin{enumerate}[label=\textbf{AC\arabic*.}, leftmargin=1.5cm]
+  \item The learner corpus is converted into a trainable format with explicit
+  tone labels, waveform paths, and speech masks for the SSL systems.
+  \item The main SSL experiments use a speaker-disjoint train/development/test
+  split, and all split sizes are reported.
+  \item All six planned model setups are trained or otherwise evaluated under a
+  documented protocol.
+  \item Final test performance is reported with accuracy, macro-F1, weighted F1,
+  per-category metrics, and confusion matrices.
+  \item At least one SSL setup improves over the conventional CNN reference in
+  class-balanced evaluation, indicating that pre-trained speech representations
+  are useful for learner-tone assessment.
+  \item The comparison identifies the strongest configuration and explains
+  remaining class-level weaknesses rather than reporting only a single aggregate
+  score.
+  \item The experiment outputs are stored in machine-readable files so that the
+  tables and figures in the thesis can be traced back to saved results.
+\end{enumerate}
+
+These criteria evaluate the thesis as a scientific study. They do not require a
+deployable CAPT application, real-time inference, or user-interface integration.
+Those are outside the scope of the present work.
 
 \section{Use Cases}
 \label{sec:proposal:usecases}
 
+The immediate use case is research-oriented model comparison. A researcher
+selects an experimental setup, trains or fine-tunes the model, and evaluates it
+on held-out learner recordings. The output is a set of quantitative measures
+that show how closely the model agrees with expert tone judgements. This use
+case supports the main thesis objective: determining which modelling route is
+most suitable for Polish learner tone classification.
+
+A second use case is diagnostic analysis of learner-tone errors. After
+inference, the predicted and expert labels can be compared in a confusion
+matrix. This makes it possible to identify systematic confusions, such as
+misclassification of \(T_3\) or under-recognition of the non-standard
+\(T_{\mathrm{NS}}\) category. Such analysis is useful for both model development
+and language pedagogy because it shows which tonal categories require more
+robust automatic handling.
+
+A third use case is preparation for a CAPT feedback module. In a future system,
+a learner would record a Mandarin word or short phrase, and the classifier would
+return the perceived tone category. The feedback module could then compare this
+prediction with the intended prompt tone and decide whether to mark the
+production as acceptable, incorrect, or uncertain. The present thesis addresses
+only the classifier needed for this scenario. It does not decide how feedback
+should be phrased or how uncertainty should be shown to the learner.
+
+The final use case is instructor support. An instructor could use model outputs
+as a preliminary screening tool to locate recordings that deserve closer human
+inspection. This use case is appropriate only if the system is treated as an aid
+and not as a replacement for expert judgement. The experimental results in
+Chapter~\ref{chapter:5_Experiments} therefore report not only the best aggregate
+model but also the expert categories for which automatic assessment remains weakest.
+
+\section{Chapter Summary}
+\label{sec:proposal:summary}
+
+This chapter defined the thesis problem as expert-aligned Mandarin tone
+classification for Polish learner speech. The proposed solution is a comparative
+assessment pipeline that evaluates one CNN baseline and five SSL-based systems
+under documented data, modelling, and evaluation requirements. The chapter also
+stated the assumptions behind the use of expert labels and frame-level
+supervision, identified the main limitations, and specified acceptance criteria
+for judging the experimental study. Chapter~\ref{chapter:4_Design} describes
+the implementation of this proposal.
