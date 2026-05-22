@@ -144,6 +144,7 @@
 %% -------------------- Tables / Lists / Mathematics --------------
 \RequirePackage{multirow} % merge cells across rows
 \RequirePackage{tabularx,array} % automatic column widths
+\RequirePackage{longtable} % tables that may span multiple pages
 \RequirePackage{booktabs} % high-quality horizontal rules for tables
 
 \RequirePackage{enumerate} % custom numbering

@@ -5,6 +5,7 @@
 \usepackage{xspace}
 \usepackage{algorithm}
 \usepackage{algpseudocode}
+\usepackage{longtable}
 
 %% --- Convenience abbreviations ---
 \newcommand{\eg}{e.g.\@\xspace}
@@ -34,6 +35,19 @@
 \newcommand{\todo}[1]{\textcolor{red}{\textbf{[TODO: #1]}}}
 \newcommand{\fixme}[1]{\textcolor{orange}{\textbf{[FIXME: #1]}}}
 \newcommand{\note}[1]{\textcolor{blue}{\textbf{[NOTE: #1]}}}
+\newcommand{\safeincludegraphics}[2][]{%
+  \IfFileExists{#2}{%
+    \includegraphics[#1]{#2}%
+  }{%
+    \fbox{%
+      \begin{minipage}[c][0.28\textwidth][c]{0.92\linewidth}
+        \centering\small
+        Placeholder\\[2pt]
+        \footnotesize Placeholder.
+      \end{minipage}%
+    }%
+  }%
+}
 
 %% --- Math operators ---
 \DeclareMathOperator*{\argmax}{arg\,max}
