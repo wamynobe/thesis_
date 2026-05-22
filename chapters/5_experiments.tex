@@ -1,45 +1,492 @@
 %% ============================================================
-%% Chapter 5 — Experiments
+%% Chapter 5 -- Experimental Results and Analysis
 %% ============================================================
 
-\chapter{Experiments}\label{chapter:5_Experiments}
+\chapter{Experimental Results and Analysis}\label{chapter:5_Experiments}
 
-\section{Test Plan and Methodology}
-\label{sec:exp:plan}
+This chapter presents the experimental results for the six tone-classification
+setups defined in Chapter~\ref{chapter:4_Design}. The previous chapter described
+the CNN baseline, the Wav2Vec~2.0 adaptation routes, the HuBERT variants, and
+the speaker-disjoint learner split used by the self-supervised systems. This
+chapter evaluates how well those systems reproduce expert perceptual tone labels
+on held-out Polish learner speech. The analysis first defines the evaluation
+metrics and protocol, then compares the aggregate results, examines training
+behaviour, analyses the most difficult tone categories, and finally discusses the
+findings with respect to the research questions stated in
+Chapter~\ref{chapter:3_Proposal}.
 
-\section{Testbed Configuration}
-\label{sec:exp:config}
+\section{Evaluation Metrics and Protocol}
+\label{sec:exp:protocol}
 
-\subsection{Datasets}
-\label{sec:exp:config:datasets}
+The evaluation measures agreement between the predicted tone category
+\(\hat{y}_i\) and the expert label \(y_i\) for each test utterance \(i\). The
+target set is \(\mathcal{T}=\{T_1,T_2,T_3,T_4,T_{\mathrm{NS}}\}\), where
+\(T_{\mathrm{NS}}\) denotes a non-standard learner production rather than the
+linguistic neutral tone. Accuracy reports the proportion of correctly classified
+utterances:
+\begin{equation}
+  \mathrm{Accuracy}
+  =
+  \frac{1}{N}\sum_{i=1}^{N}\mathbf{1}\!\left[\hat{y}_i=y_i\right].
+  \label{eq:exp:accuracy}
+\end{equation}
 
-\subsection{Environment}
-\label{sec:exp:config:environment}
+Because the learner corpus is class-imbalanced, accuracy is not sufficient on
+its own. For each class \(c\), precision, recall, and F1 are computed as
+\begin{equation}
+  P_c=\frac{\mathrm{TP}_c}{\mathrm{TP}_c+\mathrm{FP}_c},
+  \qquad
+  R_c=\frac{\mathrm{TP}_c}{\mathrm{TP}_c+\mathrm{FN}_c},
+  \qquad
+  F1_c=\frac{2P_cR_c}{P_c+R_c}.
+  \label{eq:exp:class_f1}
+\end{equation}
+Macro-F1 gives equal weight to all five tone categories, while weighted F1
+weights each class by its support \(n_c\):
+\begin{equation}
+  \mathrm{Macro}\text{-}F1
+  =
+  \frac{1}{|\mathcal{T}|}\sum_{c\in\mathcal{T}}F1_c,
+  \qquad
+  \mathrm{Weighted}\ F1
+  =
+  \sum_{c\in\mathcal{T}}\frac{n_c}{N}F1_c.
+  \label{eq:exp:aggregate_f1}
+\end{equation}
+Macro-F1 is therefore the most informative aggregate metric for this thesis,
+because it exposes whether a model performs poorly on sparse categories such as
+\(T_3\) or \(T_{\mathrm{NS}}\).
 
-\section{Results}
-\label{sec:exp:results}
+Model selection always used development data, and the final test set was
+evaluated only after checkpoint selection was complete. The CNN baseline uses
+a random image split with $N=1{,}194$ test images, selecting its checkpoint by
+validation accuracy. The five SSL setups share a speaker-disjoint learner
+split with $N=2{,}282$ test utterances and 464 development utterances; their
+selection metric is learner-development accuracy for Setups~2, 3a--3c (learner
+stage), 4, and 5, and learner-development macro-F1 for Setup~6. For the
+intermediate stage in Setups~3a--3c the Stage~A checkpoint is picked on the
+AISHELL-1 development set (693 utterances, frame accuracy) before the learner
+stage takes over.
 
-\subsection{Setup 1: CNN Baseline}
-\label{sec:exp:results:cnn}
+\section{Overall Model Comparison}
+\label{sec:exp:aggregate}
 
-\subsection{Setup 2: Wav2Vec2 (Learner Data Only)}
-\label{sec:exp:results:wav2vec_learner}
+Table~\ref{tab:exp:aggregate} reports the aggregate test results. The main
+comparison is among the five self-supervised systems because they use the same
+speaker-disjoint learner test split. The CNN baseline is included to show the
+performance of a conventional mel-spectrogram classifier under its original
+random image split.
 
-\subsection{Setup 3: Wav2Vec2 Pre-trained on AISHELL-1}
-\label{sec:exp:results:wav2vec_aishell}
+\begin{table}[H]
+\centering
+\caption{Aggregate test performance for the six experimental setups. SSL rows
+share the speaker-disjoint learner test set ($N=2\,282$); the CNN row uses an
+independent random image split ($N=1\,194$) and is reported as a ToneNet-style
+reference. Higher values are better; best values per metric are in
+\textbf{bold}.}
+\label{tab:exp:aggregate}
+\scriptsize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}>{\centering\arraybackslash}p{0.05\textwidth}
+>{\raggedright\arraybackslash}p{0.36\textwidth}
+>{\raggedright\arraybackslash}p{0.20\textwidth}
+>{\centering\arraybackslash}p{0.08\textwidth}
+>{\centering\arraybackslash}p{0.08\textwidth}
+>{\centering\arraybackslash}p{0.08\textwidth}@{}}
+\toprule
+\textbf{Setup} & \textbf{System} & \textbf{Pre-training source} & \textbf{Acc. (\%)} & \textbf{Macro-F1 (\%)} & \textbf{Weighted F1 (\%)} \\
+\midrule
+1  & ToneNet-style CNN                                & n/a                          & 72.53 & 60.00 & 71.00 \\
+2  & Wav2Vec~2.0, learner fine-tuning                 & LibriSpeech                  & 77.56 & 70.64 & 77.39 \\
+3a & Wav2Vec~2.0 + AISHELL-1 (label1)                 & LibriSpeech $+$ AISHELL-1    & 77.13 & 71.46 & 77.18 \\
+3b & Wav2Vec~2.0 + AISHELL-1 (label2)                 & LibriSpeech $+$ AISHELL-1    & 76.69 & 71.41 & 76.65 \\
+3c & Wav2Vec~2.0 + AISHELL-1 (label3)                 & LibriSpeech $+$ AISHELL-1    & 76.91 & 71.42 & 77.01 \\
+4  & Chinese Wav2Vec~2.0-Large                        & WenetSpeech       & 77.26 & 67.33 & 75.49 \\
+5  & Chinese HuBERT-Large, frame-level CE             & WenetSpeech       & \textbf{80.28} & \textbf{73.37} & \textbf{80.00} \\
+6  & Chinese HuBERT-Large, attention $+$ focal loss   & WenetSpeech       & 78.62 & 71.61 & 78.40 \\
+\bottomrule
+\end{tabular}
+\end{table}
 
-\subsection{Setup 4: Wav2Vec2 Pre-trained on AISHELL-1 + OMPAL}
-\label{sec:exp:results:wav2vec_aishell_ompal}
+The strongest overall system is Setup~5, the Chinese HuBERT-Large model trained
+with frame-level cross-entropy and majority voting. It reaches 80.28\,\%
+accuracy, 73.37\,\% macro-F1, and 80.00\,\% weighted F1. Compared with the
+direct English-pretrained Wav2Vec~2.0 learner fine-tuning baseline (Setup~2),
+this corresponds to gains of 2.72 percentage points in accuracy and 2.73
+percentage points in macro-F1. Setup~6 uses the same HuBERT backbone but replaces
+frame voting with attention pooling and focal loss. It still performs strongly,
+with 78.62\,\% accuracy and 71.61\,\% macro-F1, but it does not improve over the
+simpler frame-level HuBERT objective.
 
-\subsection{Setup 5: Chinese Wav2Vec2-Large}
-\label{sec:exp:results:chinese_wav2vec}
+The Wav2Vec~2.0 results show that intermediate native-Mandarin adaptation does
+provide a modest class-balanced benefit, but not a clear accuracy gain. Direct
+learner fine-tuning (Setup~2) obtains 77.56\,\% accuracy and 70.64\,\%
+macro-F1. The three AISHELL-1 streams converge to a narrow band of
+71.41--71.46\,\% macro-F1, all above the learner-only baseline, while their
+accuracies remain slightly below Setup~2. The label1 stream (Setup~3a) reaches
+the strongest downstream result among the three AISHELL-1 variants, with
+77.13\,\% accuracy and 71.46\,\% macro-F1. The class-level analysis in
+Section~\ref{sec:exp:class_level} shows that the AISHELL-1 intermediate stage
+improves both \(T_3\) and \(T_{\mathrm{NS}}\) behaviour, while modest losses on
+some canonical tones limit its accuracy gains.
 
-\subsection{Setup 6: Chinese HuBERT-Large}
-\label{sec:exp:results:chinese_hubert}
+The placement of frame labels within the AISHELL-1 syllable (label1, label2,
+label3) has a smaller effect on downstream learner accuracy than the presence
+of the AISHELL-1 stage itself. The three streams reach Stage~A frame accuracy
+of 87.90\,\%, 92.05\,\%, and 91.00\,\% on the AISHELL-1 development set;
+label2 is the highest of the three, but label1 obtains the strongest
+downstream learner result. The native-frame selection score therefore does not
+perfectly predict learner-test performance, even though all three streams remain
+close to one another after learner fine-tuning. On the learner development set,
+the SSL backbones reach 75.65\,\% (Setup~2), 76.29\,\% (Setup~4), and 81.90\,\%
+(Setup~5) accuracy and 73.86\,\% macro-F1 for the attention head (Setup~6);
+these dev scores match the ordering of the held-out test results, indicating
+that checkpoint selection was stable.
 
-\section{Comparative Analysis}
-\label{sec:exp:comparison}
+The Mandarin-pretrained Wav2Vec~2.0 checkpoint (Setup~4) reaches 77.26\,\%
+accuracy, comparable to the AISHELL-1 routes, but its macro-F1 falls to
+67.33\,\%, the lowest among the SSL systems. The drop is caused by very poor
+recognition of \(T_{\mathrm{NS}}\), as shown in
+Section~\ref{sec:exp:class_level}. Therefore, language-matched pre-training
+alone does not guarantee class-balanced improvement; the downstream architecture
+and objective also determine whether the model can handle non-canonical learner
+tones.
 
-\section{Discussion}
-\label{sec:exp:discussion}
+\section{Training Behaviour}
+\label{sec:exp:curves}
 
+The training curves were examined to verify that the selected checkpoints did
+not come from isolated spikes in development performance.
+
+The CNN baseline overfits its training set
+(Figure~\ref{fig:exp:cnn_curve}). Training accuracy reaches 100\,\% within
+roughly ten epochs while validation accuracy plateaus near 68\,\% and
+validation loss starts to creep up. This is the textbook overfit signature for
+a from-scratch image classifier on a small split, and explains why the CNN
+checkpoint is selected on validation accuracy rather than left at the final
+epoch. The confusion matrix on the same run
+(Figure~\ref{fig:exp:cnn_cm}) shows that the residual error is concentrated on
+\(T_3\) and \(T_{\mathrm{NS}}\): \(T_3\) is heavily confused with \(T_2\), and
+\(T_{\mathrm{NS}}\) productions are scattered across all four canonical tones.
+This per-class pattern is the same one quantified for the CNN row of
+Tables~\ref{tab:exp:aggregate} and~\ref{tab:exp:class_level}, although the
+absolute counts there come from an earlier CNN run on the smaller
+$N=1{,}194$ image split rather than the run plotted here.
+
+\begin{figure}[H]
+\centering
+\safeincludegraphics[width=0.85\textwidth]{code/output/cnn_training/cnn_training_curve.png}
+\caption{CNN baseline training and validation curves.}
+\label{fig:exp:cnn_curve}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\safeincludegraphics[width=0.6\textwidth]{code/output/cnn_training/cnn_training_confusion_matrix.png}
+\caption{CNN baseline test-set confusion matrix.}
+\label{fig:exp:cnn_cm}
+\end{figure}
+
+The SSL curves
+(Figures~\ref{fig:exp:w2v_direct}, \ref{fig:exp:aishell_curves},
+\ref{fig:exp:aishell_learner_curves}, and~\ref{fig:exp:hubert_curves}) all use
+a vertical dashed line to mark the point at which the Transformer blocks were
+unfrozen after the initial head-only training phase
+
+\begin{figure}[H]
+\centering
+\begin{minipage}{0.49\textwidth}
+\centering
+\safeincludegraphics[width=\linewidth]{code/output/w2v2_large_en_baseline_learner/training_curves_smoothed.png}
+\small English checkpoint Wav2Vec~2.0
+\end{minipage}
+\hfill
+\begin{minipage}{0.49\textwidth}
+\centering
+\safeincludegraphics[width=\linewidth]{code/output/w2v2_large_zh_learner/training_curves_smoothed.png}
+\small Chinese checkpoint Wav2Vec~2.0-Large
+\end{minipage}
+\caption{Training curves for direct learner fine-tuning of Wav2Vec~2.0 systems.}
+\label{fig:exp:w2v_direct}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\safeincludegraphics[width=\textwidth]{code/output/wave2vec_aishell1_training_curves_smoothed.png}
+\caption{AISHELL-1 intermediate-training curves for the three frame-label
+streams used in Setups~3a--3c.}
+\label{fig:exp:aishell_curves}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\safeincludegraphics[width=\textwidth]{code/output/wave2vec_aishell1_learner_dataset_training_curves_smoothed.png}
+\caption{Learner fine-tuning curves for Wav2Vec~2.0 checkpoints initialised
+from AISHELL-1.}
+\label{fig:exp:aishell_learner_curves}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{minipage}{0.49\textwidth}
+\centering
+\safeincludegraphics[width=\linewidth]{code/output/hubert_large_zh_learner/training_curves_smoothed.png}
+\small Frame-level cross-entropy
+\end{minipage}
+\hfill
+\begin{minipage}{0.49\textwidth}
+\centering
+\safeincludegraphics[width=\linewidth]{code/output/hubert_large_zh_attn_learner/training_curves_smoothed.png}
+\small Attention pooling with focal loss
+\end{minipage}
+\caption{Training curves for Chinese HuBERT-Large learner fine-tuning.}
+\label{fig:exp:hubert_curves}
+\end{figure}
+
+The Wav2Vec~2.0 curves show the expected two-phase pattern. During the frozen
+Transformer stage, the classifier head learns a stable initial mapping from SSL
+features to tone categories. After unfreezing, development accuracy rises and
+then levels off, indicating that the selected checkpoints are part of a stable
+training region rather than one-off fluctuations. The AISHELL-1 curves reach
+higher frame-level development accuracy than the learner curves, which is
+expected because the intermediate task uses clean native speech and frame-level
+labels. However, the learner results in Table~\ref{tab:exp:aggregate} show that
+the highest AISHELL-1 development score does not necessarily produce the best
+learner classifier.
+
+Both HuBERT variants train smoothly after unfreezing, but their final test
+results differ. The frame-level HuBERT model achieves the best development
+accuracy and also the strongest held-out test performance. The attention-pooling
+model is selected by macro-F1 and is designed to reduce the effect of class
+imbalance, yet its held-out macro-F1 remains below the frame-level model. In
+this dataset, the additional pooling mechanism did not compensate for the
+benefit of dense frame-level supervision and majority voting.
+
+\section{Class-Level Error Analysis}
+\label{sec:exp:class_level}
+
+Aggregate scores hide important differences between tone categories. Table
+\ref{tab:exp:class_level} reports per-class recall and per-class \(F_1\) for
+every class and every setup. It is the consolidated class-level reference for
+the rest of this chapter. The two categories \(T_{\mathrm{NS}}\) and
+\(T_3\) produced the largest class-level errors across the SSL systems and are
+also linguistically important: \(T_{\mathrm{NS}}\) groups non-canonical
+learner productions, and \(T_3\) is the canonical tone most often
+mis-produced by learners whose first language does not use lexical
+tone~\cite{hao2012}.
+
+\begin{table}[H]
+\centering
+\caption{Per-class precision (P), recall (R), and \(F_1\) on the
+speaker-disjoint learner test split (CNN uses the random image split). Values
+are in percentage points; the strongest value for each class--metric pair
+(excluding the CNN reference) is in \textbf{bold}. CNN precision is recovered
+from the reported R and \(F_1\) because the original CNN run is not retained in
+machine-readable form. Confusion matrices for every setup are reproduced in
+Appendix~\ref{sec:app:confusion_matrices}.}
+\label{tab:exp:class_level}
+\tiny
+\setlength{\tabcolsep}{2pt}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{@{}>{\centering\arraybackslash}p{0.03\textwidth}
+>{\raggedright\arraybackslash}p{0.21\textwidth}
+ccccccccccccccc@{}}
+\toprule
+ & & \multicolumn{3}{c}{\(T_{\mathrm{NS}}\)} & \multicolumn{3}{c}{\(T_1\)} & \multicolumn{3}{c}{\(T_2\)} & \multicolumn{3}{c}{\(T_3\)} & \multicolumn{3}{c}{\(T_4\)} \\
+\cmidrule(lr){3-5}\cmidrule(lr){6-8}\cmidrule(lr){9-11}\cmidrule(lr){12-14}\cmidrule(lr){15-17}
+\textbf{S} & \textbf{System} & \textbf{P} & \textbf{R} & \(F_1\) & \textbf{P} & \textbf{R} & \(F_1\) & \textbf{P} & \textbf{R} & \(F_1\) & \textbf{P} & \textbf{R} & \(F_1\) & \textbf{P} & \textbf{R} & \(F_1\) \\
+\midrule
+1  & CNN baseline                       & 60.79 & 37.00 & 46.00 & 76.03 & 78.00 & 77.00 & 72.57 & 82.00 & 77.00 & 51.33 & 14.00 & 22.00 & 71.36 & 86.00 & 78.00 \\
+2  & Wav2Vec~2.0, learner only          & 55.92 & 47.58 & 51.42 & 80.36 & 80.60 & 80.48 & 81.91 & 79.78 & 80.83 & 50.00 & 57.60 & 53.53 & 84.13 & 89.94 & 86.94 \\
+3a & Wav2Vec~2.0 + AISHELL-1 label1     & 59.91 & 53.63 & 56.60 & 79.50 & 80.45 & 79.97 & 81.63 & 76.50 & 78.98 & 48.50 & 64.80 & 55.48 & 84.50 & 88.17 & 86.29 \\
+3b & Wav2Vec~2.0 + AISHELL-1 label2     & 61.97 & 53.23 & 57.27 & 77.30 & 80.30 & 78.77 & 81.97 & 75.14 & 78.40 & 50.31 & \textbf{65.60} & \textbf{56.94} & 83.12 & 88.36 & 85.66 \\
+3c & Wav2Vec~2.0 + AISHELL-1 label3     & 57.08 & \textbf{55.24} & 56.15 & 79.06 & 80.60 & 79.82 & 80.61 & 76.09 & 78.29 & 50.32 & 63.20 & 56.03 & 86.50 & 87.18 & 86.84 \\
+4  & Chinese Wav2Vec~2.0-Large          & \textbf{72.09} & 25.00 & 37.13 & 79.46 & 83.13 & 81.25 & 74.40 & \textbf{84.97} & 79.34 & \textbf{59.18} & 46.40 & 52.02 & 82.71 & \textbf{91.52} & 86.89 \\
+5  & Chinese HuBERT-Large, CE           & 66.32 & 50.81 & \textbf{57.53} & \textbf{81.78} & \textbf{85.07} & \textbf{83.39} & \textbf{83.02} & 83.47 & \textbf{83.24} & 52.59 & 56.80 & 54.62 & \textbf{86.64} & 89.55 & \textbf{88.07} \\
+6  & Chinese HuBERT-Large, attn $+$ focal & 64.97 & 51.61 & \textbf{57.53} & 79.89 & 84.18 & 81.98 & 81.50 & 80.05 & 80.77 & 48.18 & 52.80 & 50.38 & 86.04 & 88.76 & 87.38 \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
+
+The clearest class-level failure appears in Setup~4. Chinese Wav2Vec~2.0-Large
+correctly identifies only 62 of the 248 \(T_{\mathrm{NS}}\) test utterances,
+giving 25.00\,\% recall. The confusion matrix
+(Table~\ref{tab:exp:cm_w2v_chinese}) shows that 91 of those 248 utterances are
+assigned to \(T_2\). The same backbone produces the strongest \(T_2\) recall
+of any setup (84.97\,\%), confirming that the representation is rich for
+canonical Mandarin tones; the deficit is in modelling the absence of canonical
+tone. This pattern is consistent with a Mandarin-pretrained backbone whose
+internal templates for the four canonical tones are sharp enough to absorb
+acoustically ambiguous learner productions into the nearest canonical class,
+rather than preserving the expert's non-standard judgement.
+
+\begin{table}[H]
+\centering
+\caption{Setup~4 (Chinese Wav2Vec~2.0-Large) confusion matrix on the
+speaker-disjoint learner test split. Rows are expert labels; columns are
+model predictions.}
+\label{tab:exp:cm_w2v_chinese}
+\small
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+ & \textbf{Pred. \(T_{\mathrm{NS}}\)} & \textbf{Pred. \(T_1\)} & \textbf{Pred. \(T_2\)} & \textbf{Pred. \(T_3\)} & \textbf{Pred. \(T_4\)} \\
+\midrule
+True \(T_{\mathrm{NS}}\) & 62 & 27 & 91 & 25 & 43 \\
+True \(T_1\)             &  9 & 557 & 73 &  0 & 31 \\
+True \(T_2\)             &  8 & 82 & 622 & 10 & 10 \\
+True \(T_3\)             &  5 & 11 & 38 & 58 & 13 \\
+True \(T_4\)             &  2 & 24 & 12 &  5 & 464 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+For \(T_3\), all three AISHELL-1-initialised Wav2Vec~2.0 systems improve recall
+over the learner-only baseline (Setup~2): 64.80, 65.60, and 63.20\,\% against
+57.60\,\%. Setup~3b obtains the best \(T_3\) recall and \(F_1\) (56.94\,\%)
+among all SSL systems, while Setups~3a and 3c stay close behind. Native Mandarin
+frame supervision therefore selectively helps the canonical tone most often
+mis-produced by non-tonal-L1 learners.
+
+For \(T_{\mathrm{NS}}\), the AISHELL-1 routes and the HuBERT routes both improve
+over the learner-only Wav2Vec~2.0 baseline. Setup~3c gives the highest
+\(T_{\mathrm{NS}}\) recall (55.24\,\%), while Setups~5 and~6 tie for the highest
+\(T_{\mathrm{NS}}\) \(F_1\) (57.53\,\%). The attention-focal HuBERT variant is
+therefore not uniquely strongest on this class, and its lower \(T_3\) score
+helps explain why it remains below the simpler HuBERT CE model on aggregate
+metrics. The two minority categories are not improved jointly by any single
+setup in this study. The remaining \(T_3\) and \(T_{\mathrm{NS}}\) \(F_1\) values,
+all in the 50--58\,\% range, are well
+below the \(F_1\) values of \(T_1\), \(T_2\), and \(T_4\) (typically above
+80\,\% across the SSL systems), and these two categories therefore remain
+the main bottlenecks for an expert-aligned Mandarin tone assessment model.
+
+\section{Discussion and Analysis}
+\label{sec:exp:interpretation}
+
+The aggregate and class-level results answer the research questions from
+Chapter~\ref{chapter:3_Proposal} with different levels of certainty. The first
+four questions are directly tested by the experiments, while the last two are
+answered by interpreting the reported results in the broader CAPT setting.
+
+\paragraph{RQ1: CNN versus self-supervised speech models.}
+The self-supervised systems provide stronger class-balanced agreement with the
+expert tone labels than the ToneNet-style CNN reference. The CNN reaches
+60.00\,\% macro-F1 on its random image split, while every SSL setup reaches
+at least 67.33\,\% macro-F1 on the stricter speaker-disjoint learner
+protocol, and the best SSL system (Setup~5) reaches 73.37\,\%. The class-level
+breakdown in Table~\ref{tab:exp:class_level} shows that the gap is
+concentrated on the two minority categories: for \(T_1\) and \(T_2\) the CNN
+reaches \(F_1\) values within a few percentage points of the SSL systems
+(CNN 77\,\% vs SSL 78.29--83.39\,\%), and for \(T_4\) the CNN trails the SSL
+systems by roughly 8 percentage points (CNN 78\,\% vs SSL 85.66--88.07\,\%),
+but the largest gaps appear on \(T_3\) (CNN 22\,\% vs SSL 50.38--56.94\,\%)
+and \(T_{\mathrm{NS}}\) (CNN 46\,\% vs SSL 51.42--57.53\,\%, with Setup~4 the
+exception at 37.13\,\%). The class-balanced advantage of SSL therefore
+concentrates on \(T_3\) and \(T_{\mathrm{NS}}\) but is also visible on \(T_4\).
+Because the CNN and SSL systems do not share the same split protocol, this
+result is evidence that SSL representations are more promising for this task,
+not a fully controlled head-to-head comparison.
+
+\paragraph{RQ2: AISHELL-1 intermediate adaptation.}
+Intermediate adaptation on native Mandarin speech modestly lifts aggregate
+macro-F1 above the learner-only baseline, although it does not improve overall
+accuracy. Direct learner fine-tuning (Setup~2) reached 70.64\,\% macro-F1,
+while the three AISHELL-1 variants converged to 71.41--71.46\,\% macro-F1.
+The class-level analysis shows why: all three AISHELL-1 streams improved both
+\(T_3\) and \(T_{\mathrm{NS}}\) recall over Setup~2, but their gains on these
+minority categories were partly offset by weaker scores on some canonical
+tones. Native Mandarin frame supervision therefore helps class-balanced learner
+assessment, but the transfer is not strong enough to dominate the frame-level
+HuBERT system. The
+narrow gap among the three label streams shows that the placement of frame
+labels within the syllable (full toned onset+rhyme, rhyme-only with a
+separate consonant class, or midpoint-only) has a smaller effect on
+downstream learner accuracy than the AISHELL-1 stage as a whole. Within the
+Setup~3 group, the highest AISHELL-1 frame accuracy (92.05\,\% for label2)
+does not coincide with the strongest learner-test result, which is obtained by
+label1.
+
+\paragraph{RQ3: Mandarin-specific pre-training.}
+Mandarin-specific pre-training helps only when the downstream objective can also
+represent non-canonical learner productions. Chinese Wav2Vec~2.0-Large reaches
+accuracy close to English-pretrained Wav2Vec~2.0, but its weak
+\(T_{\mathrm{NS}}\) recall lowers macro-F1. Chinese HuBERT-Large does not show
+the same failure pattern and gives the best aggregate and class-level balance.
+The result therefore supports Mandarin-specific pre-training for HuBERT in this
+setup, but not as a universal explanation for improved learner-tone assessment.
+
+\paragraph{RQ4: Most difficult expert categories.}
+The remaining errors concentrate in \(T_3\) and \(T_{\mathrm{NS}}\). \(T_3\)
+remains difficult because its contour is phonetically variable and frequently
+confused by non-tonal-L1 learners. \(T_{\mathrm{NS}}\) is difficult for a
+different reason: it is not a single acoustic category, but a perceptual label
+for productions that do not realise any canonical tone. Future systems should
+therefore target these categories directly, for example through class-aware
+losses, confidence calibration, or more precise tone-bearing interval labels.
+
+\paragraph{RQ5: Expert labels versus intended-tone evaluation.}
+Evaluating against expert perceptual labels changes the interpretation of the
+scores. A model is not rewarded for predicting the prompt tone if the learner's
+realised production was judged differently by the expert. This is especially
+important for \(T_{\mathrm{NS}}\), where the correct output is a non-standard
+assessment category rather than one of the four canonical tones. The reported
+accuracy and F1 values should therefore be read as agreement with expert
+judgement in a CAPT context, not as ordinary native-speaker tone recognition.
+
+\paragraph{RQ6: Integration with a phonetic-accuracy classifier.}
+The tonal classifier can be combined with an independently trained
+phonetic-accuracy classifier only if both modules expose reliable confidence
+information and use compatible utterance or token references. The present
+results show that tone prediction is strongest for canonical tones and weaker
+for \(T_3\) and \(T_{\mathrm{NS}}\). A two-dimensional CAPT feedback signal
+should therefore avoid overconfident corrective feedback for these difficult
+classes unless it also includes calibration, prompt-tone context, and a clear
+policy for disagreement between the tone and segmental classifiers.
+
+\section{Limitations}
+\label{sec:exp:limitations}
+
+The main limitation is that the CNN baseline and the SSL systems do not share
+the same split protocol. The CNN row is therefore used only as a reference point
+for a conventional ToneNet-style mel-spectrogram classifier. A fully controlled
+CNN-versus-SSL comparison would require the image model to be trained and tested
+on the same speaker-disjoint partition used for the SSL systems.
+
+The learner frame-level objective is also approximate. A single expert
+utterance-level tone label is copied to all MFA-selected speech frames. This
+provides a practical supervision signal, but it does not identify the exact
+tone-bearing interval within each learner utterance. The AISHELL-1 label-stream
+experiments show that temporal label placement matters, so future work should
+test syllable-level or phone-level tone targets, CTC-style objectives, and
+class-aware loss weighting for \(T_3\) and \(T_{\mathrm{NS}}\).
+
+Finally, the evaluation measures agreement with one expert annotation source.
+This matches the assessment target used in the thesis, but it does not estimate
+inter-rater reliability. Additional expert labels would make it possible to
+separate model errors from ambiguous human judgements, especially for
+non-standard learner productions.
+
+\section{Chapter Summary}
+\label{sec:exp:summary}
+
+This chapter evaluated six Mandarin tone-classification setups on Polish
+learner speech. The best system was Setup~5, Chinese HuBERT-Large with
+frame-level cross-entropy, which achieved 80.28\,\% accuracy, 73.37\,\%
+macro-F1, and 80.00\,\% weighted F1 on the speaker-disjoint learner test set.
+Among the Wav2Vec~2.0 systems, the strongest macro-F1 came from the AISHELL-1
+label1 route (Setup~3a) at 71.46\,\%, with the three AISHELL-1 intermediate
+variants converging to a narrow band of 71.41--71.46\,\% macro-F1; the
+AISHELL-1 stage improved \(T_3\) and \(T_{\mathrm{NS}}\) behaviour but did not
+improve accuracy over the learner-only baseline. The Chinese Wav2Vec~2.0
+backbone (Setup~4) reached test accuracy comparable to the AISHELL-1 routes
+but suffered a sharp \(T_{\mathrm{NS}}\) collapse, illustrating that the
+benefit of language-matched pre-training depends on the downstream backbone.
+The attention-focal HuBERT variant (Setup~6) tied Setup~5 on
+\(T_{\mathrm{NS}}\) \(F_1\), but it reduced \(T_3\) and aggregate performance.
+Training curves
+showed stable convergence after Transformer unfreezing, and class-level
+analysis identified \(T_3\) and \(T_{\mathrm{NS}}\) as the most difficult
+categories. The results support self-supervised speech representations for
+expert-aligned Mandarin tone assessment, but they also show that future CAPT
+systems must handle non-canonical learner productions more explicitly.
