@@ -138,7 +138,7 @@
 \RequirePackage{float} % placement control for figures/tables
 \RequirePackage{placeins}
 \RequirePackage{tikz} % vector diagrams (used for architecture figures)
-\usetikzlibrary{positioning,arrows.meta,shapes.geometric,fit,calc,backgrounds,chains}
+\usetikzlibrary{positioning,arrows.meta,shapes.geometric,fit,calc,backgrounds,chains,decorations.pathreplacing,decorations.markings,tikzmark}
 \raggedbottom % global bottom align
 
 %% -------------------- Tables / Lists / Mathematics --------------

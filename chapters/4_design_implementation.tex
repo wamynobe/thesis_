@@ -305,10 +305,11 @@ For SSL training, each input is a mono 16\,kHz utterance and the batch size is
 one utterance. Optimisation uses AdamW, gradient clipping at maximum norm~1.0,
 and 1{,}000 warm-up updates. During the frozen phase, only the learned layer
 weights and the tone-classification head are updated, using a learning rate of
-\(1\times10^{-4}\). For Setups~2, 3, 5, and~6, the Transformer layers are
+\(1\times10^{-4}\). For Setups~3, 5, and~6, the Transformer layers are
 unfrozen after 2{,}000 updates and training continues to 40{,}000 updates;
-Setup~4 retains the 5{,}000-update unfreeze point and 30{,}000-update training
-budget selected for that backbone. After unfreezing, the Transformer is
+for Setups~2 and~4 the corresponding values are 5{,}000 and 30{,}000. The
+schedule choice for each setup is justified in
+Appendix~\ref{sec:app:sensitivity}. After unfreezing, the Transformer is
 fine-tuned with learning rate \(1\times10^{-5}\), while the convolutional
 feature encoder remains frozen.
 Development evaluation is performed every 1{,}000 updates. Checkpoint selection

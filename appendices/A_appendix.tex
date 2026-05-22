@@ -3,22 +3,628 @@
 %% ============================================================
 \chapter{Dataset Details}\label{page:A_appendix}
 
-\todo{Include detailed tables: full vocabulary list for Stage~I and Stage~II,
-per-word utterance counts, speaker demographics breakdown.}
+\section{Learner Corpus Summary}
+\label{sec:app:dataset_summary}
+
+Table~\ref{tab:app:learner_corpus_summary} records the corpus quantities used
+throughout the experiments.
+
+The assessment spreadsheet contains 17\,050 candidate utterance slots (7\,625
+in Stage~I and 9\,425 in Stage~II). A slot is dropped before SSL training if
+any of the following holds: (i)~the corresponding audio file is missing on
+disk; (ii)~the expert left the tone field blank (\texttt{NULL}) for that slot;
+(iii)~Montreal Forced Aligner failed to produce a valid speech mask for the
+recording; (iv)~the Stage~II slot received a multi-tone annotation rather than
+a single tone (the frame-level objective requires one tone target per
+utterance). The 11\,323 surviving items form the SSL manifests. The CNN
+baseline does not require an MFA mask and therefore retains 11\,934 items.
+
+\begin{table}[H]
+\centering
+\caption{Learner corpus summary.}
+\label{tab:app:learner_corpus_summary}
+\small
+\setlength{\tabcolsep}{6pt}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.45\textwidth}
+>{\raggedleft\arraybackslash}p{0.42\textwidth}@{}}
+\toprule
+\textbf{Quantity} & \textbf{Value} \\
+\midrule
+Speakers in assessment (M\,/\,F)         & 679 (481\,/\,198) \\
+Stage~I source utterances                 & 7\,625 \\
+Stage~II source utterances                & 9\,425 \\
+Stage~I after MFA + single-tone filter   & 6\,623 \\
+Stage~II after MFA + single-tone filter  & 4\,700 \\
+Speakers retained in SSL manifests        & 678 \\
+SSL split (speaker-disjoint)              & 8\,577 / 464 / 2\,282 \\
+CNN image split (random)                  & 9\,546 / 1\,194 / 1\,194 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:app:csv_tone_counts} gives the descriptive tone-label counts
+after the audio-availability, non-null and single-tone filters (criteria~i,
+ii, iv on page~\pageref{sec:app:dataset_summary}) but before the MFA-mask
+filter (criterion~iii). Tone value~0 is mapped to \(T_{\mathrm{NS}}\), the
+non-standard learner-production category, while values~1--4 are mapped to
+\(T_1\)--\(T_4\). For Stage~I the MFA filter further drops 611 utterances
+(7\,234 $\to$ 6\,623); for Stage~II it removes none, so the counts here
+coincide with the manifest counts in
+Table~\ref{tab:app:learner_corpus_summary}.
+
+\begin{table}[H]
+\centering
+\caption{Tone-label counts after the non-MFA filters and before the
+MFA-mask filter (criteria~i, ii, iv applied; criterion~iii pending).}
+\label{tab:app:csv_tone_counts}
+\small
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+\textbf{Stage} & \textbf{\(T_{\mathrm{NS}}\)} & \textbf{\(T_1\)} & \textbf{\(T_2\)} & \textbf{\(T_3\)} & \textbf{\(T_4\)} \\
+\midrule
+Stage~I & 560 & 2\,292 & 2\,432 & 190 & 1\,760 \\
+Stage~II & 882 & 1\,098 & 1\,469 & 462 & 789 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Prompt Inventory}
+\label{sec:app:prompt_inventory}
+
+Stage~I uses 12 single-syllable Mandarin number words; Stage~II uses 18
+everyday-vocabulary items. Pinyin is reported without tone marks because the
+target label is the tone perceived by the expert, not the canonical lexical
+tone. Disyllabic items such as \texttt{xihuan} and \texttt{bu xihuan} are
+sometimes listed with a neutral second syllable in modern dictionaries; the
+expert annotation for this corpus treats them as full tones, so omitting tone
+marks is also conservative against that lexical convention.
+
+\begin{table}[H]
+\centering
+\caption{Stage~I vocabulary.}
+\label{tab:app:stage1_vocab}
+\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{ID} & \textbf{Pinyin} & \textbf{Gloss} \\
+\midrule
+a0 & ling & zero \\
+a1 & yi & one \\
+a2 & er & two \\
+a3 & san & three \\
+a4 & si & four \\
+a5 & wu & five \\
+a6 & liu & six \\
+a7 & qi & seven \\
+a8 & ba & eight \\
+a9 & jiu & nine \\
+a10 & shi & ten \\
+a100 & bai & hundred \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Stage~II vocabulary.}
+\label{tab:app:stage2_vocab}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{ID} & \textbf{Pinyin} & \textbf{Gloss} \\
+\midrule
+q1 & bu xihuan & do not like \\
+q2 & shu & book \\
+q3 & qian & money \\
+q4 & yisheng & doctor \\
+q5 & he & and \\
+q6 & xihuan & like \\
+q7 & cai & dish; vegetable \\
+q8 & wo & I; me \\
+q9 & shui & water \\
+q10 & gou & dog \\
+q11 & shuiguo & fruit \\
+q12 & mao & cat \\
+q13 & cha & tea \\
+q14 & pingguo & apple \\
+q15 & laoshi & teacher \\
+q16 & bai & white \\
+q17 & hong & red \\
+q18 & hei & black \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 %% ============================================================
 %% Appendix B — Hyperparameter Configurations
 %% ============================================================
 \chapter{Hyperparameter Configurations}\label{page:B_appendix}
 
-\todo{List all hyperparameters for each experimental setup in tabular form:
-learning rate, batch size, epochs, warmup steps, weight decay, etc.}
+\section{CNN Baseline}
+\label{sec:app:cnn_hparams}
 
-%% ============================================================
-%% Appendix C — Additional Results
-%% ============================================================
-\chapter{Additional Results}\label{page:C_appendix}
+Table~\ref{tab:app:cnn_hparams} lists the main configuration used for the
+ToneNet-style CNN baseline. Values were fixed before the final test evaluation;
+no hyperparameter search was performed for the CNN.
 
-\todo{Include supplementary confusion matrices, per-tone F1 bar charts,
-training/validation loss curves, and any other figures not included
-in the main text.}
+\begin{table}[H]
+\centering
+\caption{CNN baseline hyperparameters.}
+\label{tab:app:cnn_hparams}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.26\textwidth}
+>{\raggedright\arraybackslash}p{0.31\textwidth}
+>{\raggedright\arraybackslash}p{0.31\textwidth}@{}}
+\toprule
+\textbf{Parameter} & \textbf{Value} & \textbf{Source or rationale} \\
+\midrule
+Spectrogram representation & 64 mel bands, 50--350\,Hz frequency range, rendered as 225\(\times\)225 RGB images. & Follows the low-frequency mel-image formulation used by ToneNet~\cite{gao2019tonenet}. \\
+\addlinespace
+Loss & Sparse categorical cross-entropy. & Adapted from ToneNet~\cite{gao2019tonenet}. \\
+\addlinespace
+Optimizer & Stochastic gradient descent with Nesterov momentum. & Adapted from ToneNet~\cite{gao2019tonenet}. \\
+\addlinespace
+Learning rate & \(1\times10^{-3}\). & Adapted from ToneNet~\cite{gao2019tonenet}.    \\
+\addlinespace
+Momentum & 0.9 with Nesterov acceleration. & Adapted from the ToneNet reference implementation~\cite{gao2019tonenet}. \\
+\addlinespace
+Batch size & 128. & Adapted from ToneNet~\cite{gao2019tonenet}. \\
+\addlinespace
+Maximum epochs & 50. & Adapted from ToneNet~\cite{gao2019tonenet}, paired with validation early stopping as a safety net. \\
+\addlinespace
+Checkpoint selection & Best validation accuracy. & Development-only model selection. \\
+\addlinespace
+Early stopping & Validation-accuracy patience of 25 epochs. & Prevents selecting a later overfitted epoch without using test data. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Self-Supervised Speech Models}
+\label{sec:app:ssl_hparams}
+
+Table~\ref{tab:app:ssl_common_hparams} gives the common learner fine-tuning
+settings used by the SSL systems unless otherwise stated. All SSL experiments
+operate on raw 16\,kHz waveforms and use the same speaker-disjoint learner
+split. The backbone choices follow Wav2Vec~2.0 and HuBERT
+architectures~\cite{baevski2020,hsu2021}.
+
+The unfreezing point and the total update budget were refined by the Optuna
+sensitivity study in Appendix~\ref{sec:app:sensitivity}; the post-Optuna
+schedule applies to Setups 3, 5 and 6. Setups 2 and 4 were trained earlier
+with the pre-Optuna schedule (\texttt{FREEZE\_UPDATES}\,=\,5\,000,
+\texttt{TOTAL\_UPDATES}\,=\,30\,000) and were not re-run after the Optuna
+study. For Setup~4, this matches the within-search optimum confirmed by
+Study~2 for the Mandarin Wav2Vec~2.0 backbone.
+
+\begingroup
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.25\textwidth}
+>{\raggedright\arraybackslash}p{0.33\textwidth}
+>{\raggedright\arraybackslash}p{0.30\textwidth}@{}}
+\caption{Common SSL learner fine-tuning hyperparameters.}
+\label{tab:app:ssl_common_hparams}\\
+\toprule
+\textbf{Parameter} & \textbf{Value} & \textbf{Source or rationale} \\
+\midrule
+\endfirsthead
+\caption[]{Common SSL learner fine-tuning hyperparameters (continued).}\\
+\toprule
+\textbf{Parameter} & \textbf{Value} & \textbf{Source or rationale} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+Batch size & 1 utterance. & Conservative memory setting for Large SSL checkpoints and variable-length recordings. \\
+\addlinespace
+Optimizer & AdamW with gradient clipping at maximum norm~1.0. & AdamW optimizer~\cite{loshchilov2019decoupled}. \\
+\addlinespace
+Learning-rate schedule & Linear warm-up for 1\,000 updates, then linear decay over the total update budget. & Implementation schedule held fixed after sensitivity testing; warm-up length is included in Appendix~\ref{sec:app:sensitivity}. \\
+\addlinespace
+Total updates & 40\,000 (Setups 3, 5, 6); 30\,000 (Setups 2 and 4). & Appendix~\ref{sec:app:sensitivity}. \\
+\addlinespace
+Frozen phase learning rate & \(1\times10^{-4}\). & Optuna confirms a stable plateau around this value (Appendix~\ref{sec:app:sensitivity}). \\
+\addlinespace
+Unfreezing point & 2\,000 updates (Setups 3, 5, 6); 5\,000 updates (Setups 2 and 4). & Appendix~\ref{sec:app:sensitivity}. \\
+\addlinespace
+Full fine-tuning learning rate & \(1\times10^{-5}\) after Transformer unfreezing. & Adapted from the Wav2Vec~2.0 frame-level tone fine-tuning recipe of Yuan et~al.~\cite{yuan2023}. \\
+\addlinespace
+\end{longtable}
+\endgroup
+
+The frame-voting SSL setups use frame-level cross-entropy on MFA-masked learner
+frames (adapted from Yuan et~al.~\cite{yuan2023}) and majority-vote utterance
+prediction at inference. Learner development accuracy selects the frame-voting
+learner checkpoints, while the HuBERT attention model is selected by learner
+development macro-F1 and the AISHELL-1 intermediate checkpoints are selected by
+native-speech frame accuracy.
+
+The AISHELL-1 intermediate stage used 33\,986 training utterances and 693
+development utterances after filtering. Its frame-label inventories
+(Table~\ref{tab:design:aishell_label_streams}) were:
+\texttt{label1} with \(T_1\)--\(T_4\) plus ignored neutral-tone and silence
+frames, and \texttt{label2} and \texttt{label3} with one additional ignored
+non-tone class plus ignored neutral-tone and silence frames. The fifth learner
+category \(T_{\mathrm{NS}}\) is not supervised on AISHELL-1 and is randomly
+re-initialised before learner fine-tuning.
+
+\section{Hyperparameter Sensitivity}
+\label{sec:app:sensitivity}
+
+Four schedule hyperparameters in Table~\ref{tab:app:ssl_common_hparams} are
+not specified by Yuan et~al.~\cite{yuan2023}: the frozen-phase learning rate
+\texttt{LR\_HEAD}, the unfreezing point \texttt{FREEZE\_UPDATES}, the linear
+warm-up length \texttt{WARMUP\_UPDATES}, and the total update budget
+\texttt{TOTAL\_UPDATES}. These four values were verified through three
+Optuna studies~\cite{akiba2019optuna} on development-set performance. The
+fixed values shared across all studies (Yuan's \texttt{LR\_FULL}, the
+frame-level cross-entropy objective, and the pretrained checkpoint of each
+study's target setup) are held constant so that the search isolates the
+contribution of the schedule; Study~3 additionally fixes the AISHELL-1
+label-stream choice to \texttt{label2}. Each study enqueues the pre-Optuna
+baseline configuration as its first trial so that the baseline always has a
+reference value in the resulting scatter plots.
+
+\subsection{Study 1: Setup 5 - Chinese HuBERT-Large with frame-level CE}
+\label{sec:app:sensitivity:hubert}
+
+Setup~5 is the strongest configuration in Chapter~\ref{chapter:5_Experiments}
+and is therefore taken as the primary sensitivity target. All four schedule
+hyperparameters are searched. The study ran 15 Optuna trials with the
+TPE sampler and a MedianPruner~\cite{akiba2019optuna} activated at update~7\,000.
+
+\begin{table}[H]
+\centering
+\caption{Setup~5 sensitivity}
+\label{tab:app:opt_hubert}
+\small
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{@{}rcrrrr@{}}
+\toprule
+\textbf{Trial} & \textbf{\texttt{LR\_HEAD}} & \textbf{\texttt{FREEZE}} & \textbf{\texttt{WARMUP}} & \textbf{\texttt{TOTAL}} & \textbf{Dev macro-F1} \\
+\midrule
+12      & \(1.4{\times}10^{-4}\) & 2\,000 & 2\,000 & 40\,000 & \textbf{0.7643} \\
+13            & \(1.7{\times}10^{-4}\) & 2\,000 & 2\,000 & 40\,000 & 0.7632 \\
+ 8            & \(2.5{\times}10^{-5}\) & 2\,000 & 2\,000 & 40\,000 & 0.7629 \\
+\midrule
+ 0 & \(1.0{\times}10^{-4}\) & 5\,000 & 1\,000 & 30\,000 & 0.7255 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Of 15 trials, 10 ran to completion and 5 were pruned. Two pruned trials
+(numbers~7 and~9) combined an \texttt{LR\_HEAD}\,$\gtrsim 2{\times}10^{-4}$
+with a late unfreezing point (\texttt{FREEZE\_UPDATES}\,=\,7\,000--10\,000) and
+collapsed to near-chance development macro-F1 (0.37--0.39) by update~7\,000.
+The other three pruned trials (numbers~10, 11, and~14) shared the best
+schedule profile (\texttt{FREEZE}\,=\,2\,000, \texttt{WARMUP}\,=\,2\,000,
+\texttt{TOTAL}\,=\,40\,000) and reached macro-F1 between 0.69 and 0.76 before
+being stopped by the median pruner for not improving fast enough relative to
+the running leader, rather than for collapsing. The top three completed trials
+all share \texttt{FREEZE\_UPDATES}\,=\,2\,000, \texttt{WARMUP\_UPDATES}\,=\,2\,000,
+and \texttt{TOTAL\_UPDATES}\,=\,40\,000, with \texttt{LR\_HEAD} spread over
+nearly a decade ($2.5{\times}10^{-5}$ to $1.7{\times}10^{-4}$); macro-F1 is
+therefore essentially insensitive to \texttt{LR\_HEAD} within a wide range.
+The pre-Optuna baseline reaches 0.7255, which is approximately 3.9 percentage
+points below the empirical optimum but in line with the other moderate-scoring
+trials. The chosen post-Optuna schedule for Setups~3, 5, and 6 uses
+\texttt{FREEZE}\,=\,2\,000 and \texttt{TOTAL}\,=\,40\,000 directly, but
+retains \texttt{WARMUP}\,=\,1\,000 as a middle ground between the value
+preferred here (2\,000) and the value preferred in Study~3 (0). Setup~2 was
+trained before the Optuna study and uses the pre-Optuna schedule
+(\texttt{FREEZE}\,=\,5\,000, \texttt{TOTAL}\,=\,30\,000); it was not re-run
+after the study.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{code/output/optuna/hubert_ce_sen/sensitivity_scatter.png}
+\caption{Setup~5 Optuna sensitivity}
+\label{fig:app:opt_hubert_scatter}
+\end{figure}
+
+\subsection{Study 2: Setup 4 - Chinese Wav2Vec~2.0-Large}
+\label{sec:app:sensitivity:chinese_w2v}
+
+Setup~4 collapses on \(T_{\mathrm{NS}}\) in the main experiments
+(Section~\ref{sec:exp:class_level}). This study tests whether the
+collapse is a hyperparameter artefact or a property of the Mandarin-pretrained
+representation. The search is deliberately narrow: \texttt{LR\_HEAD} and
+\texttt{FREEZE\_UPDATES} only, with \texttt{WARMUP} and \texttt{TOTAL} fixed
+at the main-run values so that the two variables most likely to influence
+class-balanced behaviour are isolated. The trial reports both dev macro-F1 and dev \(T_{\mathrm{NS}}\) recall.
+
+\begin{table}[H]
+\centering
+\caption{Setup~4 sensitivity}
+\label{tab:app:opt_chinese_w2v}
+\small
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{@{}rcrcc@{}}
+\toprule
+\textbf{Trial} & \textbf{\texttt{LR\_HEAD}} & \textbf{\texttt{FREEZE}} & \textbf{Dev macro-F1} & \textbf{Dev \(T_{\mathrm{NS}}\) recall} \\
+\midrule
+0                     & \(1.0{\times}10^{-4}\) & 5\,000 & \textbf{0.6703} & \textbf{0.3448} \\
+2                     & \(2.8{\times}10^{-5}\) & 3\,000 & 0.6515          & 0.3103 \\
+1                     & \(2.8{\times}10^{-5}\) & 15\,000 & 0.5738          & 0.3103 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Of 10 trials, only 3 ran to completion and 7 were pruned. Two of the pruned
+trials (numbers~5 and~9) combined \texttt{FREEZE\_UPDATES}\,=\,15\,000 with a
+moderate \texttt{LR\_HEAD} and stalled near 0.24 macro-F1; trial~7 used a
+very high \texttt{LR\_HEAD}\,$\approx 1.8{\times}10^{-4}$ and was pruned at
+macro-F1\,$\approx$\,0.48. The remaining four pruned trials (numbers~3, 4, 6,
+and~8) used moderate hyperparameters but were stopped between update~7\,000
+and~18\,000 at intermediate macro-F1 between 0.21 and 0.62, because they were
+not improving fast enough relative to the leading completed trials.
+The Mandarin-pretrained Wav2Vec backbone therefore has a narrower viable
+hyperparameter region than HuBERT (Setup~5 pruned only 5/15 trials, and only
+two of those at near-chance scores). Within this search space, no completed
+trial moved dev \(T_{\mathrm{NS}}\) recall above 0.35, and the 25\,\% Setup~4
+test \(T_{\mathrm{NS}}\) recall reported in Section~\ref{sec:exp:class_level}
+is therefore not plausibly recovered by re-tuning \texttt{LR\_HEAD} and
+\texttt{FREEZE\_UPDATES} alone. The collapse is not resolved by these two
+hyperparameters; whether it can be resolved by a wider sweep
+(loss function, pooling, class weighting, total-update budget, calibration,
+seed) is not tested here, so the Section~\ref{sec:exp:interpretation}
+interpretation that attributes the residual gap to the Mandarin-pretrained
+representation is consistent with this study but not proven by it. The
+baseline schedule for Setup~4 is retained in the main runs because it is the
+within-search optimum for that backbone.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{code/output/optuna/chinese_w2v_sen/sensitivity_scatter.png}
+\caption{Setup~4 Optuna sensitivity.}
+\label{fig:app:opt_chinese_w2v_scatter}
+\end{figure}
+
+\subsection{Study 3: AISHELL-1 Stage A}
+\label{sec:app:sensitivity:aishell}
+
+Yuan et~al.~\cite{yuan2023} tuned their Stage~A schedule on AISHELL-1 frame
+labels derived from an HMM-GMM aligner; this thesis uses Montreal Forced
+Aligner~\cite{mcauliffe2017mfa} instead. We therefore re-tune the Stage~A
+schedule on the MFA-derived frame labels rather than re-using Yuan's
+HMM-GMM-derived schedule unchanged. All four schedule hyperparameters are
+searched on the \texttt{label2} stream (the stream with the highest AISHELL-1
+development frame accuracy, which is the Stage~A checkpoint-selection
+metric). The objective is the AISHELL-1 development frame accuracy over
+\(T_1\)--\(T_4\), which matches the metric used to select the Stage~A
+checkpoint in Section~\ref{sec:design:pipeline:aishell}.
+
+\begin{table}[H]
+\centering
+\caption{Stage~A sensitivity}
+\label{tab:app:opt_aishell}
+\small
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{@{}rcrrrr@{}}
+\toprule
+\textbf{Trial} & \textbf{\texttt{LR\_HEAD}} & \textbf{\texttt{FREEZE}} & \textbf{\texttt{WARMUP}} & \textbf{\texttt{TOTAL}} & \textbf{Dev frame acc.} \\
+\midrule
+10 (best)     & \(9.2{\times}10^{-5}\) & 2\,000 & 0 & 40\,000 & \textbf{0.9194} \\
+ 5            & \(9.1{\times}10^{-5}\) & 2\,000 & 0 & 30\,000 & 0.9121 \\
+\midrule
+ 0 (baseline) & \(1.0{\times}10^{-4}\) & 5\,000 & 1\,000 & 30\,000 & 0.9106 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Of 12 trials, 5 completed and 7 were pruned. The top two trials again share
+\texttt{FREEZE\_UPDATES}\,=\,2\,000, and the best configuration uses
+\texttt{TOTAL\_UPDATES}\,=\,40\,000 and no warm-up. The baseline finishes
+0.88 percentage points below the empirical optimum.
+
+Two findings cross over from Studies 1--2 to Study 3. First,
+\texttt{FREEZE\_UPDATES}\,=\,2\,000 is preferred by both Setup~5 (learner
+data, $\sim$9\,000 utterances) and Stage~A (AISHELL, $\sim$34\,000 utterances),
+despite the latter being roughly four times larger; training-set size is
+therefore unlikely to be the driving factor. We do not run a cross-aligner
+ablation (MFA vs HMM-GMM) or further controls, so the underlying cause is not
+isolated here. Second, the
+larger value Yuan et~al.~\cite{yuan2023} use (\texttt{FREEZE\_UPDATES}\,=\,10\,000)
+is now clearly inferior to 2\,000 in every study where it is reachable,
+which justifies the documented deviation in
+Section~\ref{sec:design:implementation}.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{code/output/optuna/aishell_stage_a_label2_sensitivity/sensitivity_scatter.png}
+\caption{Stage~A Optuna sensitivity}
+\label{fig:app:opt_aishell_scatter}
+\end{figure}
+
+\subsection{Cross-study summary}
+\label{sec:app:sensitivity:summary}
+
+Three findings recur across the studies and motivate the schedule used in
+the main experiments:
+
+\begin{enumerate}
+  \item \textbf{Earlier unfreeze is consistently better.}
+  Studies~1 and~3 both find \texttt{FREEZE\_UPDATES}\,=\,2\,000 optimal in
+  their search range; values $\geq$\,10\,000 (including Yuan et~al.'s
+  \texttt{FREEZE\_UPDATES}\,=\,10\,000) are at best uncompetitive and at
+  worst catastrophic. The exception is Setup~4, where Study~2 confirmed 5\,000
+  within its search range.
+  \item \textbf{A longer update budget helps.}
+  Both Studies~1 and~3 prefer \texttt{TOTAL\_UPDATES}\,=\,40\,000 over the
+  pre-Optuna value of 30\,000. The main learner runs adopt 40\,000.
+  \item \textbf{\texttt{LR\_HEAD} sits on a plateau around $10^{-4}$.}
+  Studies~1--3 each place their best \texttt{LR\_HEAD} between
+  $9\times10^{-5}$ and $1.7\times10^{-4}$, and Study~1 shows that
+  performance is essentially flat over almost a decade around that range.
+  The chosen value $1\times10^{-4}$ remains in the safe plateau.
+\end{enumerate}
+
+\section{Per-Setup Confusion Matrices}
+\label{sec:app:confusion_matrices}
+
+Tables~\ref{tab:app:cm_w2v_learner}--\ref{tab:app:cm_hubert_attn} reproduce
+the speaker-disjoint learner test-set confusion matrices for the six SSL
+setups (Setup~4 is already in Table~\ref{tab:exp:cm_w2v_chinese}). Rows are
+expert labels, columns are model predictions; the diagonal counts are the
+recall numerators in Table~\ref{tab:exp:class_level}. The CNN baseline
+confusion matrix from a separate re-run is shown as
+Figure~\ref{fig:exp:cnn_cm}; the per-class pattern is the same as the CNN row
+of Table~\ref{tab:exp:class_level}, only the absolute counts differ because
+the random-image $N=1{,}194$ run reported in
+Tables~\ref{tab:exp:aggregate}--\ref{tab:exp:class_level} is not retained in
+machine-readable form.
+
+\begin{table}[H]
+\centering
+\caption{Setup~2 (Wav2Vec~2.0, learner-only fine-tuning) confusion matrix.}
+\label{tab:app:cm_w2v_learner}
+\small
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+ & \textbf{Pred. \(T_{\mathrm{NS}}\)} & \textbf{Pred. \(T_1\)} & \textbf{Pred. \(T_2\)} & \textbf{Pred. \(T_3\)} & \textbf{Pred. \(T_4\)} \\
+\midrule
+True \(T_{\mathrm{NS}}\) & 118 &  23 &  49 & 31 &  27 \\
+True \(T_1\)             &  27 & 540 &  59 & 10 &  34 \\
+True \(T_2\)             &  44 &  70 & 584 & 24 &  10 \\
+True \(T_3\)             &  10 &   9 &  19 & 72 &  15 \\
+True \(T_4\)             &  12 &  30 &   2 &  7 & 456 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Setup~3a (Wav2Vec~2.0 + AISHELL-1 \texttt{label1}) confusion matrix.}
+\label{tab:app:cm_w2v_aishell_l1}
+\small
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+ & \textbf{Pred. \(T_{\mathrm{NS}}\)} & \textbf{Pred. \(T_1\)} & \textbf{Pred. \(T_2\)} & \textbf{Pred. \(T_3\)} & \textbf{Pred. \(T_4\)} \\
+\midrule
+True \(T_{\mathrm{NS}}\) & 133 &  16 &  44 & 30 &  25 \\
+True \(T_1\)             &  26 & 539 &  62 & 12 &  31 \\
+True \(T_2\)             &  45 &  82 & 560 & 29 &  16 \\
+True \(T_3\)             &   9 &  10 &  15 & 81 &  10 \\
+True \(T_4\)             &   9 &  31 &   5 & 15 & 447 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Setup~3b (Wav2Vec~2.0 + AISHELL-1 \texttt{label2}) confusion matrix.}
+\label{tab:app:cm_w2v_aishell_l2}
+\small
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+ & \textbf{Pred. \(T_{\mathrm{NS}}\)} & \textbf{Pred. \(T_1\)} & \textbf{Pred. \(T_2\)} & \textbf{Pred. \(T_3\)} & \textbf{Pred. \(T_4\)} \\
+\midrule
+True \(T_{\mathrm{NS}}\) & 132 &  23 &  38 & 27 &  28 \\
+True \(T_1\)             &  21 & 538 &  66 & 10 &  35 \\
+True \(T_2\)             &  44 &  88 & 550 & 34 &  16 \\
+True \(T_3\)             &   7 &  11 &  13 & 82 &  12 \\
+True \(T_4\)             &   9 &  36 &   4 & 10 & 448 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Setup~3c (Wav2Vec~2.0 + AISHELL-1 \texttt{label3}) confusion matrix.}
+\label{tab:app:cm_w2v_aishell_l3}
+\small
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+ & \textbf{Pred. \(T_{\mathrm{NS}}\)} & \textbf{Pred. \(T_1\)} & \textbf{Pred. \(T_2\)} & \textbf{Pred. \(T_3\)} & \textbf{Pred. \(T_4\)} \\
+\midrule
+True \(T_{\mathrm{NS}}\) & 137 &  20 &  42 & 28 &  21 \\
+True \(T_1\)             &  22 & 540 &  76 &  7 &  25 \\
+True \(T_2\)             &  54 &  80 & 557 & 31 &  10 \\
+True \(T_3\)             &  12 &   9 &  12 & 79 &  13 \\
+True \(T_4\)             &  15 &  34 &   4 & 12 & 442 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Setup~5 (Chinese HuBERT-Large, frame-level CE) confusion matrix.}
+\label{tab:app:cm_hubert_ce}
+\small
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+ & \textbf{Pred. \(T_{\mathrm{NS}}\)} & \textbf{Pred. \(T_1\)} & \textbf{Pred. \(T_2\)} & \textbf{Pred. \(T_3\)} & \textbf{Pred. \(T_4\)} \\
+\midrule
+True \(T_{\mathrm{NS}}\) & 126 &  25 &  45 & 27 &  25 \\
+True \(T_1\)             &  14 & 570 &  49 &  7 &  30 \\
+True \(T_2\)             &  27 &  66 & 611 & 23 &   5 \\
+True \(T_3\)             &   9 &  11 &  24 & 71 &  10 \\
+True \(T_4\)             &  14 &  25 &   7 &  7 & 454 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Setup~6 (Chinese HuBERT-Large, attention pooling $+$ focal loss) confusion matrix.}
+\label{tab:app:cm_hubert_attn}
+\small
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+ & \textbf{Pred. \(T_{\mathrm{NS}}\)} & \textbf{Pred. \(T_1\)} & \textbf{Pred. \(T_2\)} & \textbf{Pred. \(T_3\)} & \textbf{Pred. \(T_4\)} \\
+\midrule
+True \(T_{\mathrm{NS}}\) & 128 &  29 &  38 & 23 &  30 \\
+True \(T_1\)             &  13 & 564 &  63 &  6 &  24 \\
+True \(T_2\)             &  34 &  74 & 586 & 32 &   6 \\
+True \(T_3\)             &  12 &   9 &  25 & 66 &  13 \\
+True \(T_4\)             &  10 &  30 &   7 & 10 & 450 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Software and Hardware Environment}
+\label{sec:app:environment}
+
+Table~\ref{tab:app:environment} lists the software stack. Montreal Forced Aligner was run once outside the training loop
+to produce the frame-label streams and learner speech masks; its output is
+consumed through file-based manifests.
+
+\begin{table}[H]
+\centering
+\caption{Software environment.}
+\label{tab:app:environment}
+\small
+\setlength{\tabcolsep}{6pt}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.45\textwidth}
+>{\raggedleft\arraybackslash}p{0.30\textwidth}@{}}
+\toprule
+\textbf{Component} & \textbf{Version} \\
+\midrule
+Operating system          & Linux \\
+Python                    & 3.10 \\
+CUDA toolkit              & 12.9 \\
+PyTorch                   & 2.7.1 \\
+torchaudio                & 2.7.1 \\
+Hugging Face Transformers & 4.39.3 \\
+tokenizers                & 0.15.1 \\
+safetensors               & 0.6.2 \\
+TensorFlow                & 2.21 \\
+Keras                     & 3.12 \\
+soundfile                 & 1.2.2 \\
+librosa                   & 0.11.0 \\
+soxr-python               & 1.0.0 \\
+MFA                       & 3.3.9 \\
+NumPy                     & 2.2.6 \\
+SciPy                     & 1.15.2 \\
+scikit-learn              & 1.7.2 \\
+pandas                    & 2.3.3 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Training ran on a single GPU at default float32 precision; mixed precision
+was not enabled. Every experiment used random seed 1337, but CUDA
+non-determinism flags were left at PyTorch defaults, so results are
+numerically close but not bitwise reproducible across hardware.
