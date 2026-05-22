@@ -1,17 +1,35 @@
 {
   "exp_tag": "aishell_label1",
   "pretrained": "facebook/wav2vec2-large-960h",
-  "best_dev_frame_acc": 0.8807577388153981,
+  "best_dev_frame_acc": 0.8789985434046498,
   "train_items": 33986,
   "dev_items": 693,
-  "num_labels": 6,
-  "labels": [
+  "num_labels": 5,
+  "trained_labels": [
+    "T1",
+    "T2",
+    "T3",
+    "T4"
+  ],
+  "t_ns_label": "T_NS",
+  "ignored_raw_labels": [
+    "T5",
+    "sil"
+  ],
+  "raw_labels_observed": [
     "T1",
     "T2",
     "T3",
     "T4",
     "T5",
     "sil"
+  ],
+  "labels": [
+    "T1",
+    "T2",
+    "T3",
+    "T4",
+    "T_NS"
   ],
   "save_dir": "/home/huy/207177/output/checkpoint/exp_label1_ce"
 }
