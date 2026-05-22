@@ -7,6 +7,129 @@
 \section{Summary}
 \label{sec:summary:summary}
 
+This thesis studied automatic Mandarin tone classification for Polish learners
+using both a ToneNet-style convolutional baseline and fine-tuned self-supervised
+learning~(SSL) speech models. The task was framed as five-way tone classification over
+\(T_1\), \(T_2\), \(T_3\), \(T_4\), and \(T_{\mathrm{NS}}\), where
+\(T_{\mathrm{NS}}\) denotes a non-standard learner production outside the four
+canonical Mandarin tones. The target label was the expert annotation of the
+learner's produced tone, rather than the intended prompt tone. This makes the
+evaluation closer to computer-assisted pronunciation training, where the
+relevant question is whether a system agrees with a human assessment of the
+learner production.
+
+The implemented pipeline converted the original learner assessment material
+into two experimental representations. For the SSL systems, MFA
+alignments were used to build frame masks over 11\,323
+usable utterances from 678 speakers. The train, development, and test partitions
+were speaker-disjoint, with 8\,577, 464, and 2\,282 utterances respectively. For
+the CNN baseline, low-frequency mel-spectrogram images were generated and split
+into 9\,546 training, 1\,194 validation, and 1\,194 test images. The CNN result
+therefore serves as a ToneNet-style reference, while the SSL systems
+provide the main speaker-disjoint comparison.
+
+Six complete model configurations were evaluated. The CNN baseline classified
+mel-spectrogram images. The Wav2Vec~2.0 experiments compared direct learner
+fine-tuning, AISHELL-1 intermediate tone training followed by learner
+fine-tuning, and a Mandarin-pretrained Wav2Vec~2.0 checkpoint. The HuBERT
+experiments compared a Mandarin-pretrained frame-level model with majority
+voting against an utterance-level attention model trained with focal loss. The
+strongest overall system was Chinese HuBERT-Large with frame-level
+cross-entropy, which reached 80.28\% accuracy, 73.37\% macro-F1, and 80.00\%
+weighted F1 on the learner test set. Among the Wav2Vec~2.0 systems, the
+strongest macro-F1 came from the AISHELL-1 label1 route at 71.46\%, with the
+three AISHELL-1 intermediate variants converging to 71.41--71.46\% macro-F1.
+
+\section{Fulfilment of the Project Goals}
+\label{sec:summary:goals}
+
+Within the implemented tonal-assessment scope, the implementation satisfies the
+main technical goals defined for the project.
+First, the thesis produced a complete learner-speech preparation workflow that
+links expert labels, audio files, MFA speech masks, and speaker identities.
+Second, it reproduced a CNN baseline for comparison with prior
+image-based tone-classification work. Third, it implemented multiple SSL
+fine-tuning routes using Wav2Vec~2.0 and HuBERT, including native Mandarin
+intermediate training and Mandarin-pretrained checkpoints. Fourth, it evaluated
+the SSL models under a speaker-disjoint protocol and reported both aggregate and
+class-level metrics, which is necessary for an imbalanced learner corpus.
+Finally, it evaluated the models against expert perceptual labels and described
+how the tonal classifier could later be combined with a parallel
+phonetic-accuracy classifier in a CAPT pipeline.
+
+The acceptance criteria are therefore met at the research-prototype level. The
+system is not yet a deployable pronunciation-training application, and the
+reported labels come from the available expert annotation rather than a new
+multi-rater study. These points limit the scope of the conclusions, but they do
+not undermine the central comparison: modern SSL speech models,
+especially Chinese HuBERT-Large, provide a stronger foundation than the
+spectrogram CNN baseline for Mandarin tone classification in this Polish learner
+corpus.
+
+\section{Limitations}
+\label{sec:summary:limitations}
+
+The first limitation is corpus size and balance. The final SSL test set is large
+enough to compare model families, but the distribution is uneven across tones.
+\(T_3\) and \(T_{\mathrm{NS}}\) have fewer and more variable examples than the
+dominant classes, which makes their F1 scores sensitive to relatively small
+changes in the confusion matrix.
+
+The second limitation is supervision granularity. The learner labels are
+utterance-level expert ratings copied to the MFA-selected speech frames. This is
+a practical way to train frame-level SSL models, but it does not tell the model
+where inside the syllable the decisive tonal evidence occurs. Native AISHELL-1
+frame labels are more detailed, but they are still transferred from read native
+speech to non-native learner productions.
+
+The third limitation is evaluation comparability for the CNN. The CNN baseline
+uses a random image split, following the ToneNet-style workflow implemented in
+the notebooks. The SSL experiments use speaker-disjoint splits. The CNN result
+is useful as a baseline reference, but a future fully controlled comparison
+should train the image model under the same speaker-disjoint split.
+
+The fourth limitation is that the thesis evaluates automatic label agreement,
+not pedagogical effectiveness. A model that predicts expert tone labels can be a
+component of pronunciation feedback, but a deployed learning tool would also
+need calibrated confidence, interpretable feedback, latency constraints, and
+validation with learners and instructors.
+
 \section{Future Work}
 \label{sec:summary:future}
 
+Future work should focus first on improving the accuracy and robustness of the
+best SSL tone classifier. The strongest model still makes many errors on \(T_3\)
+and \(T_{\mathrm{NS}}\), so additional experiments should target these classes
+directly through better class balancing, class-aware losses~\cite{lin2017focal},
+calibrated decision thresholds, and stronger data augmentation. Model selection
+should also continue to use macro-F1 or another class-balanced criterion rather
+than accuracy alone, because the practical CAPT value of the system depends on
+its behaviour on difficult and less frequent learner productions.
+
+A second direction is to make the tone classifier prompt-aware. The present
+systems predict only from the learner waveform and reduce frame-level decisions
+to a single utterance label by majority voting. A feedback system, however,
+knows the word or phrase that the learner was asked to pronounce and the
+expected lexical tone of the target syllable. Future models should therefore
+condition prediction on this context, for example by providing the target word,
+the expected tone number, or a syllable-level prompt representation together
+with the acoustic frames. This would allow the system to judge whether the
+frames that should carry the target tone actually support the expected contour,
+rather than treating all speech frames as equally informative votes.
+
+The frame-level decision rule should also be redesigned for feedback. Instead
+of assigning the utterance label by majority vote over all masked frames, future
+work could use tone-bearing phone intervals, syllable-level alignment,
+CTC-style objectives~\cite{fan2023ctcbert}, attention over the expected target
+syllable, or auxiliary pitch-contour targets. These methods would make it
+possible to identify the part of the recording that caused an incorrect tone
+decision and to provide more precise feedback than a single global label.
+
+Finally, the improved tone model should be evaluated inside a prototype CAPT
+pipeline together with the parallel phonetic-accuracy
+classifier~\cite{brzeski2025mprp}. Such a prototype should combine the predicted
+tone, the expected prompt tone, model confidence, and the relevant frame or
+syllable evidence before deciding whether to mark a production as correct,
+incorrect, or uncertain. This would move the thesis model from expert-label
+classification toward learner-facing feedback while keeping the feedback tied to
+the acoustic evidence used by the classifier~\cite{rogerson2021,neri2002}.
