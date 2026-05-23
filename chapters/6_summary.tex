@@ -24,9 +24,10 @@ alignments were used to build frame masks over 11\,323
 usable utterances from 678 speakers. The train, development, and test partitions
 were speaker-disjoint, with 8\,577, 464, and 2\,282 utterances respectively. For
 the CNN baseline, low-frequency mel-spectrogram images were generated and split
-into 9\,546 training, 1\,194 validation, and 1\,194 test images. The CNN result
-therefore serves as a ToneNet-style reference, while the SSL systems
-provide the main speaker-disjoint comparison.
+by speaker into 9\,040 training, 487 validation, and 2\,407 test images. The CNN
+result therefore serves as a ToneNet-style reference under an independent
+speaker-disjoint image split, while the SSL systems provide the main matched
+comparison.
 
 Six complete model configurations were evaluated. The CNN baseline classified
 mel-spectrogram images. The Wav2Vec~2.0 experiments compared direct learner
@@ -98,14 +99,15 @@ validation with learners and instructors.
 \section{Future Work}
 \label{sec:summary:future}
 
-Future work should focus first on improving the accuracy and robustness of the
-best SSL tone classifier. The strongest model still makes many errors on \(T_3\)
-and \(T_{\mathrm{NS}}\), so additional experiments should target these classes
-directly through better class balancing, class-aware losses~\cite{lin2017focal},
-calibrated decision thresholds, and stronger data augmentation. Model selection
-should also continue to use macro-F1 or another class-balanced criterion rather
-than accuracy alone, because the practical CAPT value of the system depends on
-its behaviour on difficult and less frequent learner productions.
+Future work should focus first on improving both the accuracy and robustness of
+the best SSL tone classifier. The strongest model still makes many errors on
+\(T_3\) and \(T_{\mathrm{NS}}\), so additional experiments should target these
+classes directly through better class balancing, class-aware
+losses~\cite{lin2017focal}, calibrated decision thresholds, and stronger data
+augmentation. Model selection should consider accuracy together with macro-F1 or
+another class-balanced criterion, because practical CAPT performance depends both
+on overall agreement with expert labels and on behaviour for difficult, less
+frequent learner productions.
 
 A second direction is to make the tone classifier prompt-aware. The present
 systems predict only from the learner waveform and reduce frame-level decisions

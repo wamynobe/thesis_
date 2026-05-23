@@ -18,9 +18,10 @@ The experiments compare six complete setups. Setup~1 is a ToneNet-style CNN
 baseline. Setups~2--4 are Wav2Vec~2.0 systems with different adaptation routes.
 Setups~5--6 use Chinese HuBERT-Large with two prediction heads. All SSL systems
 share the same learner manifest format and the same speaker-disjoint
-train/development/test split. The CNN baseline follows a separate random image
-split, matching the ToneNet-style image-classification protocol rather than the
-SSL evaluation protocol.
+train/development/test split. The CNN baseline follows a separate
+speaker-disjoint image split, matching the ToneNet-style image-classification
+input format while avoiding speaker overlap between training, validation, and
+test items.
 
 \section{Model Architectures}
 \label{sec:design:models}
@@ -56,10 +57,11 @@ with learning rate 0.001, momentum~0.9, and Nesterov acceleration.
 The Wav2Vec~2.0 experiments use three fine-tuning routes, shown in
 Figure~\ref{fig:design:wav2vec_routes}. Setup~2 starts from the English
 \mbox{wav2vec2-large-960h} checkpoint and fine-tunes directly on the
-learner corpus \cite{baevski2020}. Setup~3 first trains the same checkpoint on
-AISHELL-1 frame-level Mandarin tone labels for \(T_1\)--\(T_4\), excluding
-neutral-tone and silence frames from the loss, and then fine-tunes the resulting
-checkpoints on learner speech \cite{bu2017aishell}. Setup~4 starts from
+learner corpus \cite{baevski2020}. Setup~3 follows a two-stage protocol on
+the same checkpoint: \emph{Stage~A} first fine-tunes it on AISHELL-1 frame-level
+Mandarin tone labels for \(T_1\)--\(T_4\), excluding neutral-tone and silence
+frames from the loss, and \emph{Stage~B} then fine-tunes the resulting checkpoint
+on learner speech \cite{bu2017aishell}. Setup~4 starts from
 \mbox{chinese-wav2vec2-large}, a Mandarin-specific checkpoint
 pre-trained on WenetSpeech, and fine-tunes directly on learner speech
 \cite{zhang2022wenetspeech,tencentgamemate2022}.
@@ -212,14 +214,16 @@ introduced when short waveforms are batched.
 
 Setup~3 adds an intermediate stage on native Mandarin read speech from
 AISHELL-1. After MFA alignment, frames are labelled from the corpus phone
-notation, but only frames corresponding to the four full tones
-\(T_1\)--\(T_4\) are used as AISHELL supervision. Frames annotated as the
-linguistic neutral tone, silence, consonant-only regions, or any other non-tone
-class are mapped to the ignore index and excluded from the AISHELL loss. This
-prevents the fifth learner output category from being trained to mean neutral
-tone during native-speech adaptation. The three parallel label streams are
-adapted from the design proposed by Yuan et~al.~\cite{yuan2023}: they reuse
-the same waveforms and training hyperparameters but change where
+notation, but the AISHELL objective supervises only the four full tones
+\(T_1\)--\(T_4\). Neutral-tone and silence frames are always mapped to the ignore
+index, and consonant-only regions are ignored in the streams where tone
+supervision is restricted to rhyme or tone-bearing phone centres. In
+\texttt{label1}, by contrast, the preceding onset receives the same tone label as
+the rhyme, so the whole syllable is treated as one tone-labelled region. This
+stream-specific masking prevents the fifth learner output category from being
+trained to mean neutral tone during native-speech adaptation. The three parallel
+label streams are adapted from the design proposed by Yuan et~al.~\cite{yuan2023}:
+they reuse the same waveforms and training hyperparameters but change where
 \(T_1\)--\(T_4\) supervision is placed in time
 (Table~\ref{tab:design:aishell_label_streams}).
 
@@ -291,8 +295,10 @@ identifiers from the corpus.
 \label{fig:design:cnn_mel_examples}
 \end{figure}
 
-Images are split at random in the ToneNet style:
-9\,546 training images, 1\,194 validation images, and 1\,194 test images.
+Images are split by speaker into 9\,040 training images, 487 validation images,
+and 2\,407 test images. This split is independent of the SSL partition because
+the CNN branch uses all labelled recordings that can be rendered as image
+features, including items without successful MFA alignments.
 
 \section{Training and Evaluation}
 \label{sec:design:implementation}

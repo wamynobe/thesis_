@@ -7,8 +7,8 @@
 This chapter presents the experimental results for the six tone-classification
 setups defined in Chapter~\ref{chapter:4_Design}. The previous chapter described
 the CNN baseline, the Wav2Vec~2.0 adaptation routes, the HuBERT variants, and
-the speaker-disjoint learner split used by the self-supervised systems. This
-chapter evaluates how well those systems reproduce expert perceptual tone labels
+the speaker-disjoint learner partitions used for evaluation. This chapter
+evaluates how well those systems reproduce expert perceptual tone labels
 on held-out Polish learner speech. The analysis first defines the evaluation
 metrics and protocol, then compares the aggregate results, examines training
 behaviour, analyses the most difficult tone categories, and finally discusses the
@@ -53,8 +53,9 @@ weights each class by its support \(n_c\):
   \sum_{c\in\mathcal{T}}\frac{n_c}{N}F1_c.
   \label{eq:exp:aggregate_f1}
 \end{equation}
-Macro-F1 is therefore the most informative aggregate metric for this thesis,
-because it exposes whether a model performs poorly on sparse categories such as
+Accuracy remains important because it measures the overall rate of agreement
+with expert labels. Macro-F1 is reported alongside accuracy because it exposes
+whether that overall agreement hides poor behaviour on sparse categories such as
 \(T_3\) or \(T_{\mathrm{NS}}\).
 
 Model selection always used development data, and the final test set was
@@ -141,18 +142,17 @@ downstream learner result. The native-frame selection score therefore does not
 perfectly predict learner-test performance, even though all three streams remain
 close to one another after learner fine-tuning. On the learner development set,
 the SSL backbones reach 75.65\,\% (Setup~2), 76.29\,\% (Setup~4), and 81.90\,\%
-(Setup~5) accuracy and 73.86\,\% macro-F1 for the attention head (Setup~6);
-these dev scores match the ordering of the held-out test results, indicating
-that checkpoint selection was stable.
+(Setup~5) accuracy and 73.86\,\% macro-F1 for the attention head (Setup~6).
+Setup~5 leads in both partitions, and every dev/test gap is within roughly
+two percentage points, indicating that checkpoint selection was stable; the
+order between the closely spaced Wav2Vec~2.0 routes does shift between dev
+and test, consistent with the narrow margin separating them.
 
 The Mandarin-pretrained Wav2Vec~2.0 checkpoint (Setup~4) reaches 77.26\,\%
 accuracy, comparable to the AISHELL-1 routes, but its macro-F1 falls to
 67.33\,\%, the lowest among the SSL systems. The drop is caused by very poor
 recognition of \(T_{\mathrm{NS}}\), as shown in
-Section~\ref{sec:exp:class_level}. Therefore, language-matched pre-training
-alone does not guarantee class-balanced improvement; the downstream architecture
-and objective also determine whether the model can handle non-canonical learner
-tones.
+Section~\ref{sec:exp:class_level}.
 
 \section{Training Behaviour}
 \label{sec:exp:curves}
@@ -348,7 +348,12 @@ over the learner-only baseline (Setup~2): 64.80, 65.60, and 63.20\,\% against
 57.60\,\%. Setup~3b obtains the best \(T_3\) recall and \(F_1\) (56.94\,\%)
 among all SSL systems, while Setups~3a and 3c stay close behind. Native Mandarin
 frame supervision therefore selectively helps the canonical tone most often
-mis-produced by non-tonal-L1 learners.
+mis-produced by non-tonal-L1 learners. The T2/T3 contrast cited as the most
+confusable pair for non-tonal-L1 learners~\cite{hao2012} appears asymmetric in
+these matrices: in Setup~5, 24/125 \(T_3\) utterances are predicted as \(T_2\)
+(19.2\,\%), against only 23/732 \(T_2\) utterances predicted as \(T_3\)
+(3.1\,\%), so the residual confusion runs predominantly from \(T_3\) toward
+\(T_2\) rather than in both directions.
 
 For \(T_{\mathrm{NS}}\), the AISHELL-1 routes and the HuBERT routes both improve
 over the learner-only Wav2Vec~2.0 baseline. Setup~3c gives the highest
@@ -368,7 +373,7 @@ the main bottlenecks for an expert-aligned Mandarin tone assessment model.
 
 The aggregate and class-level results answer the research questions from
 Chapter~\ref{chapter:3_Proposal} with different levels of certainty. The first
-four questions are directly tested by the experiments, while the last two are
+four questions are directly tested by the experiments, while the fifth is
 answered by interpreting the reported results in the broader CAPT setting.
 
 \paragraph{RQ1: CNN versus self-supervised speech models.}
@@ -412,13 +417,12 @@ does not coincide with the strongest learner-test result, which is obtained by
 label1.
 
 \paragraph{RQ3: Mandarin-specific pre-training.}
-Mandarin-specific pre-training helps only when the downstream objective can also
-represent non-canonical learner productions. Chinese Wav2Vec~2.0-Large reaches
-accuracy close to English-pretrained Wav2Vec~2.0, but its weak
-\(T_{\mathrm{NS}}\) recall lowers macro-F1. Chinese HuBERT-Large does not show
-the same failure pattern and gives the best aggregate and class-level balance.
-The result therefore supports Mandarin-specific pre-training for HuBERT in this
-setup, but not as a universal explanation for improved learner-tone assessment.
+Chinese Wav2Vec~2.0-Large reaches accuracy close to English-pretrained
+Wav2Vec~2.0, but its weak \(T_{\mathrm{NS}}\) recall lowers macro-F1. Chinese
+HuBERT-Large does not show the same failure pattern and gives the best
+aggregate and class-level balance. The result therefore supports
+Mandarin-specific pre-training for HuBERT in this setup, but not as a
+universal explanation for improved learner-tone assessment.
 
 \paragraph{RQ4: Most difficult expert categories.}
 The remaining errors concentrate in \(T_3\) and \(T_{\mathrm{NS}}\). \(T_3\)
@@ -433,8 +437,8 @@ losses, confidence calibration, or more precise tone-bearing interval labels.
 The tonal classifier can be combined with an independently trained
 phonetic-accuracy classifier only if both modules expose reliable confidence
 information and use compatible utterance or token references. The present
-results show that tone prediction is strongest for canonical tones and weaker
-for \(T_3\) and \(T_{\mathrm{NS}}\). A two-dimensional CAPT feedback signal
+results show that tone prediction is strongest for \(T_1\), \(T_2\), and \(T_4\)
+and weaker for \(T_3\) and \(T_{\mathrm{NS}}\). A two-dimensional CAPT feedback signal
 should therefore avoid overconfident corrective feedback for these difficult
 classes unless it also includes calibration, prompt-tone context, and a clear
 policy for disagreement between the tone and segmental classifiers.

@@ -420,7 +420,13 @@ checkpoint in Section~\ref{sec:design:pipeline:aishell}.
 Of 12 trials, 5 completed and 7 were pruned. The top two trials again share
 \texttt{FREEZE\_UPDATES}\,=\,2\,000, and the best configuration uses
 \texttt{TOTAL\_UPDATES}\,=\,40\,000 and no warm-up. The baseline finishes
-0.88 percentage points below the empirical optimum.
+0.88 percentage points below the empirical optimum. The Stage~A checkpoint
+used in Setup~3b's main run reports 92.05\,\% dev frame accuracy in
+Section~\ref{sec:exp:aggregate}; this is 0.11~percentage points above
+Trial~10 because the main run retains \texttt{WARMUP\_UPDATES}\,=\,1\,000
+(see Table~\ref{tab:app:ssl_common_hparams}) instead of the
+\texttt{WARMUP\_UPDATES}\,=\,0 of Trial~10, and seeds also differ between
+the Optuna search and the main training run.
 
 Two findings cross over from Studies 1--2 to Study 3. First,
 \texttt{FREEZE\_UPDATES}\,=\,2\,000 is preferred by both Setup~5 (learner
